@@ -1519,6 +1519,8 @@
         let short = c.title
           .replace(/['’]s Commentary.*|'s Concise.*|'s Notes.*|'s Exposition.*| Commentary.*| Notes.*/gi, '')
           .trim();
+        if (c.key === 'matthew_henry') short = 'Matthew Henry';
+        if (c.key === 'john_calvin') short = 'John Calvin';
         if (c.key === 'jfb') short = 'JFB';
         if (c.key === 'maclaren') short = 'MacLaren';
         authors.push({ key: c.key, label: short });

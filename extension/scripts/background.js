@@ -664,6 +664,60 @@ function parseBibleHubCommentary(html) {
   return commentaries;
 }
 
+/**
+ * Parses John Calvin's dedicated chapter commentary HTML for a specific verse or verse range.
+ */
+function parseCalvinCommentary(html, verseNum) {
+  if (!html) return null;
+  const startIdx = html.indexOf('<div class="padleft">');
+  const content = startIdx > -1 ? html.slice(startIdx) : html;
+
+  // Match headers like <b>Romans 6:7-11</b> or <b>Romans 6:7</b>
+  const sectionRegex = /<b>\s*(?:[1-3]?\s*[A-Za-z]+)\s+\d+:(\d+)(?:-(\d+))?\s*<\/b>/gi;
+  let match;
+  const sections = [];
+  while ((match = sectionRegex.exec(content)) !== null) {
+    const vStart = parseInt(match[1], 10);
+    const vEnd = match[2] ? parseInt(match[2], 10) : vStart;
+    sections.push({
+      vStart,
+      vEnd,
+      header: match[0],
+      index: match.index
+    });
+  }
+
+  for (let i = 0; i < sections.length; i++) {
+    const sec = sections[i];
+    if (verseNum >= sec.vStart && verseNum <= sec.vEnd) {
+      const nextIndex = (i + 1 < sections.length) ? sections[i + 1].index : content.indexOf('<div class="bot2">');
+      const sectionHtml = content.slice(sec.index, nextIndex > -1 ? nextIndex : sec.index + 5000);
+      const cleanText = sectionHtml
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&quot;/gi, '"')
+        .replace(/&ldquo;/gi, '“')
+        .replace(/&rdquo;/gi, '”')
+        .replace(/&lsquo;/gi, '‘')
+        .replace(/&rsquo;/gi, '’')
+        .replace(/&amp;/gi, '&')
+        .replace(/&#8212;/g, '—')
+        .replace(/&#8226;/g, '•')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (cleanText.length > 30) {
+        return {
+          title: "Calvin's Commentaries",
+          key: 'john_calvin',
+          text: cleanText
+        };
+      }
+    }
+  }
+  return null;
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || !message.type) return false;
 
@@ -777,12 +831,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
           }
 
-          const url = `https://biblehub.com/commentaries/${bookUrl}/${chapter}-${vNum}.htm`;
+          const mainUrl = `https://biblehub.com/commentaries/${bookUrl}/${chapter}-${vNum}.htm`;
+          const calvinUrl = `https://biblehub.com/commentaries/calvin/${bookUrl}/${chapter}.htm`;
+
           try {
-            const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
-            if (!res.ok) throw new Error(`BibleHub status ${res.status}`);
-            const html = await res.text();
-            const commentaries = parseBibleHubCommentary(html);
+            const [mainRes, calvinRes] = await Promise.all([
+              fetch(mainUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }).catch(() => null),
+              fetch(calvinUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }).catch(() => null)
+            ]);
+
+            let commentaries = [];
+            if (mainRes && mainRes.ok) {
+              const html = await mainRes.text();
+              commentaries = parseBibleHubCommentary(html);
+            }
+
+            if (calvinRes && calvinRes.ok) {
+              const calvinHtml = await calvinRes.text();
+              const calvinBlock = parseCalvinCommentary(calvinHtml, vNum);
+              if (calvinBlock && !commentaries.some(c => c.key === 'john_calvin')) {
+                commentaries.push(calvinBlock);
+              }
+            }
+
+            // Subtly promote Matthew Henry and John Calvin to appear first
+            commentaries.sort((a, b) => {
+              const rank = (k) => (k === 'matthew_henry' ? 1 : k === 'john_calvin' ? 2 : 3);
+              return rank(a.key) - rank(b.key);
+            });
 
             if (memoryCommentaryCache.size >= 30) {
               const oldest = memoryCommentaryCache.keys().next().value;
