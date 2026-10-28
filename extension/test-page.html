@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Hover — Test Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif;
+      max-width: 780px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.7;
+      color: #24292f;
+      background: #fafafa;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+    p {
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      background: #dbeafe;
+      color: #1e40af;
+      margin-bottom: 12px;
+    }
+    button.dynamic-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bible Hover — Verification Page</h1>
+  <p>Hover your mouse over any of the highlighted scripture references below to test instant 0ms previewing, translation switching, context expansion, and one-click copying.</p>
+
+  <div class="card">
+    <div class="badge">Standard & Chained References</div>
+    <p>
+      The core promise of the Gospel is declared in <strong>John 3:16-18</strong>, which tells us that God so loved the world that He gave His one and only Son. We also see assurance in <strong>Romans 8:28, 31–39</strong>; and the Apostle Paul continues this exhortation in <strong>12:1-2</strong>.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="badge">Poetry & Single-Chapter Books</div>
+    <p>
+      Consider the comfort found in <strong>Psalm 23</strong>, and the profound discourse on love in <strong>1 Cor 13:4-8a</strong>.
+      Furthermore, small epistles such as <strong>Jude 3-4</strong> and <strong>Philemon 6</strong> are fully supported even without specifying a chapter number.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="badge">Cross-Chapter & Inline Translation Tags</div>
+    <p>
+      From creation in <strong>Gen 1:26-2:3 NIV</strong> to prophetic passages like <strong>Isaiah 53:3-6 (ESV)</strong>, Bible Hover automatically detects translation tags and allows quick toggling right from the hover tooltip.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="badge">International Translations (Ukrainian, Spanish, German, Portuguese, Russian, etc.)</div>
+    <p>
+      <strong>Ukrainian (Р. Турконяка):</strong> Бо так Бог полюбив світ — <strong>Івана 3:16 (TUR)</strong>; також надія у <strong>Римлян 8:28</strong> та <strong>Буття 1:1</strong>.<br>
+      <strong>Spanish (LBLA & RV1960):</strong> Porque de tal manera amó Dios al mundo — <strong>Juan 3:16 (LBLA)</strong> y <strong>Romanos 8:28 (RV1960)</strong>.<br>
+      <strong>German (Schlachter 2000):</strong> Denn so hat Gott die Welt geliebt — <strong>Johannes 3:16 (SCH2000)</strong>.<br>
+      <strong>Portuguese (NAA):</strong> Porque Deus amou o mundo de tal maneira — <strong>João 3:16 (NAA)</strong>.<br>
+      <strong>Russian (Synodal):</strong> Ибо так возлюбил Бог мир — <strong>Иоанна 3:16 (SYNOD)</strong>.<br>
+      <strong>Global Reformed Bibles:</strong> <strong>John 3:16 (CUNPS)</strong> (Chinese Union), <strong>John 3:16 (KRV)</strong> (Korean), and <strong>John 3:16 (HIOV)</strong> (Hindi).
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="badge">Dynamic Content (SPA / MutationObserver Test)</div>
+    <p>Click the button below to inject dynamically loaded comments or articles to verify that Bible Hover tags new DOM nodes immediately without page reloads:</p>
+    <button class="dynamic-btn" id="addDynamicContent">Add Dynamic Scripture Comment</button>
+    <div id="dynamicContainer" style="margin-top: 16px;"></div>
+  </div>
+
+  <script>
+    document.getElementById('addDynamicContent').addEventListener('click', () => {
+      const container = document.getElementById('dynamicContainer');
+      const div = document.createElement('div');
+      div.style.padding = '12px';
+      div.style.background = '#f1f5f9';
+      div.style.borderRadius = '8px';
+      div.style.marginTop = '8px';
+      div.innerHTML = '<strong>Dynamically Loaded:</strong> Remember Proverbs 3:5-6 and Matthew 28:18-20!';
+      container.appendChild(div);
+    });
+  </script>
+</body>
+</html>

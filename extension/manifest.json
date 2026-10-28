@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Bible Hover",
+  "version": "1.0.0",
+  "description": "Instant 0ms hover previews for Bible scripture references with multiple offline & online translations.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Bible Hover Settings"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "shared/bible-metadata.js",
+        "scripts/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://bolls.life/*",
+    "https://api.bibleportal.com/*",
+    "https://biblehub.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data/bsb.json",
+        "icons/*.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

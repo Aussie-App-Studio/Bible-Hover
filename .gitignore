@@ -1,0 +1,21 @@
+# Build and packaging output
+dist/
+dist/staging/
+*.crx
+*.pem
+
+# Reference and third-party artifacts
+reference-extension/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE and Editor directories
+.vscode/
+.idea/
+
+# Node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Hover — Settings & Dashboard</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="dash-layout">
+    <!-- Top Header -->
+    <header class="dash-header">
+      <div class="dash-brand">
+        <img src="../icons/icon48.png" alt="Bible Hover Logo" class="dash-logo">
+        <div>
+          <h1 class="dash-title">Bible Hover Dashboard</h1>
+          <p class="dash-subtitle">Customization, translations, commentaries & offline storage</p>
+        </div>
+      </div>
+      <div class="dash-header-controls">
+        <div id="saveToast" class="save-toast" style="opacity: 0;">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M5 13l4 4L19 7"/></svg>
+          <span>Saved</span>
+        </div>
+        <div class="global-switch-card">
+          <span class="global-switch-label" id="globalStatusLabel">Extension Active</span>
+          <label class="switch" title="Toggle Bible Hover on/off globally">
+            <input type="checkbox" id="globalToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container with Sidebar -->
+    <div class="dash-body">
+      <!-- Sidebar Navigation -->
+      <aside class="dash-sidebar">
+        <nav class="nav-list">
+          <button class="nav-item active" data-tab="tab-appearance">
+            <svg viewBox="0 0 24 24"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+            <span>Appearance & Preview</span>
+          </button>
+          <button class="nav-item" data-tab="tab-translations">
+            <svg viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            <span>Translations & Languages</span>
+          </button>
+          <button class="nav-item" data-tab="tab-commentaries">
+            <svg viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            <span>Commentaries & Resources</span>
+          </button>
+          <button class="nav-item" data-tab="tab-offline">
+            <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Offline Storage & Bibles</span>
+          </button>
+          <button class="nav-item" data-tab="tab-sites">
+            <svg viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+            <span>Disabled Sites</span>
+          </button>
+          <button class="nav-item" data-tab="tab-sandbox">
+            <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span>Scripture Sandbox</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-stat">
+            <span class="stat-dot green"></span>
+            <span>100% Offline Capable</span>
+          </div>
+          <span class="version-text">v1.0.0</span>
+        </div>
+      </aside>
+
+      <!-- Content Panels -->
+      <main class="dash-main">
+
+        <!-- TAB 1: Appearance & Preview -->
+        <section class="tab-pane active" id="tab-appearance">
+          <div class="pane-header">
+            <h2>Appearance & Real-Time Preview</h2>
+            <p>Customize the visual styling, theme, font size, and layout of hover popups.</p>
+          </div>
+
+          <div class="appearance-grid">
+            <!-- Left Controls -->
+            <div class="settings-card controls-card">
+              <h3 class="card-title">Display Settings</h3>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label for="themeSelect">Theme</label>
+                  <span class="form-desc">Color palette for scripture cards and drawers</span>
+                </div>
+                <select id="themeSelect" class="dash-select">
+                  <option value="auto">Auto (Match System)</option>
+                  <option value="light">Crisp Light</option>
+                  <option value="dark">OLED Dark</option>
+                  <option value="sepia">Warm Sepia (Book Style)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label for="fontSizeSelect">Font Size</label>
+                  <span class="form-desc">Text readability inside the preview card</span>
+                </div>
+                <select id="fontSizeSelect" class="dash-select">
+                  <option value="small">Compact (13px)</option>
+                  <option value="medium">Default (14.5px)</option>
+                  <option value="large">Spacious (16px)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label for="scriptureFont">Scripture Font Family</label>
+                  <span class="form-desc">Typography for verse text (UI chrome stays system font)</span>
+                </div>
+                <select id="scriptureFont" class="dash-select">
+                  <option value="sans">Modern Sans (Default)</option>
+                  <option value="serif">Classic Bible Serif (Georgia)</option>
+                  <option value="garamond">Elegant Garamond</option>
+                  <option value="humanist">Humanist Sans (Calibri)</option>
+                  <option value="dyslexic">Dyslexia-Friendly</option>
+                  <option value="mono">Study Monospace</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label for="underlineStyle">Scripture Underline Style</label>
+                  <span class="form-desc">How recognized verses appear on webpages</span>
+                </div>
+                <select id="underlineStyle" class="dash-select">
+                  <option value="dotted">Dotted Underline</option>
+                  <option value="dashed">Dashed Underline</option>
+                  <option value="solid">Solid Underline</option>
+                  <option value="highlight">Subtle Color Highlight</option>
+                  <option value="none">No Underline (Hover Only)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label>Accent Color</label>
+                  <span class="form-desc">Color for active pills, links, and verse numbers</span>
+                </div>
+                <div class="color-picker-row">
+                  <input type="color" id="underlineColor" value="#3b82f6" class="dash-color-input">
+                  <div class="color-swatches" id="colorSwatches">
+                    <button type="button" class="swatch" data-color="#3b82f6" style="background:#3b82f6;" title="Blue"></button>
+                    <button type="button" class="swatch" data-color="#10b981" style="background:#10b981;" title="Emerald"></button>
+                    <button type="button" class="swatch" data-color="#8b5cf6" style="background:#8b5cf6;" title="Purple"></button>
+                    <button type="button" class="swatch" data-color="#f59e0b" style="background:#f59e0b;" title="Amber"></button>
+                    <button type="button" class="swatch" data-color="#ef4444" style="background:#ef4444;" title="Crimson"></button>
+                    <button type="button" class="swatch" data-color="#64748b" style="background:#64748b;" title="Slate"></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label for="hoverDelay">Hover Trigger Delay</label>
+                  <span class="form-desc">Milliseconds before the card appears on hover</span>
+                </div>
+                <div class="range-group">
+                  <input type="range" id="hoverDelay" min="50" max="600" step="25" value="120" class="dash-range">
+                  <span id="hoverDelayVal" class="range-badge">120ms</span>
+                </div>
+              </div>
+
+              <div class="form-row toggle-row">
+                <div class="form-label-group">
+                  <label for="minimalistMode" style="cursor:pointer; font-weight:600;">Pure Scripture Mode (Minimalist)</label>
+                  <span class="form-desc">Hides all translations, buttons, and commentary tabs for pure, distraction-free reading. Click text to copy.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="minimalistMode">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Right Live Preview Card -->
+            <div class="settings-card preview-card-box">
+              <div class="preview-header">
+                <h3 class="card-title">Live Preview</h3>
+                <span class="preview-badge">Real-Time</span>
+              </div>
+              <p class="card-desc">This is exactly how Bible Hover cards render on webpages:</p>
+
+              <div class="sample-web-text">
+                Hover sample: And we know that in all things God works for good with those who love him (<span class="sample-ref-anchor" id="sampleAnchor">Romans 8:28</span>).
+              </div>
+
+              <!-- Interactive Card Preview -->
+              <div class="live-tooltip-container">
+                <div class="bh-preview-card" id="previewCard">
+                  <div class="bh-preview-header">
+                    <div class="bh-title-group">
+                      <span class="bh-ref-title">Romans 8:28</span>
+                      <span class="bh-badge" id="previewBadge">BSB</span>
+                      <div class="bh-tab-bar" id="previewTabBar" style="display:none;">
+                        <button class="bh-tab-btn active" id="previewTabScr">Scripture</button>
+                        <button class="bh-tab-btn" id="previewTabComm">Commentary</button>
+                      </div>
+                    </div>
+                    <div class="bh-actions">
+                      <button class="bh-btn" id="previewCopyBtn" title="Copy verse text">
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        <span style="margin-left:3px;">Copy</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Translation bar preview -->
+                  <div class="bh-preview-trans-bar" id="previewTransBar">
+                    <span class="preview-trans-pill active">BSB</span>
+                    <span class="preview-trans-pill">KJV</span>
+                    <span class="preview-trans-pill">ESV</span>
+                    <span class="preview-trans-pill">NIV</span>
+                    <span class="preview-trans-pill">NASB</span>
+                  </div>
+
+                  <!-- Commentary pills preview -->
+                  <div class="bh-preview-comm-bar" id="previewCommBar" style="display:none;">
+                    <span class="preview-comm-pill active">All</span>
+                    <span class="preview-comm-pill">Matthew Henry</span>
+                    <span class="preview-comm-pill">Calvin</span>
+                    <span class="preview-comm-pill">JFB</span>
+                    <span class="preview-comm-pill">MacLaren</span>
+                  </div>
+
+                  <div class="bh-preview-body" id="previewBody">
+                    <div class="bh-verse-item">
+                      <span class="bh-verse-num" id="previewVerseNum">28</span>
+                      <span id="previewVerseText">And we know that God works all things together for the good of those who love Him, who are called according to His purpose.</span>
+                    </div>
+                  </div>
+
+                  <div class="bh-preview-footer" id="previewFooter">
+                    <div class="bh-footer-left">BSB</div>
+                    <div class="bh-footer-right">
+                      <span class="bh-link-btn">Full Chapter</span>
+                      <span class="bh-link-btn" id="previewExternalLink">Study ↗</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: Translations & Languages -->
+        <section class="tab-pane" id="tab-translations">
+          <div class="pane-header">
+            <h2>Translations & Languages</h2>
+            <p>Manage your primary Bible translation, active pills in the hover bar, and multilingual Bibles.</p>
+          </div>
+
+          <div class="settings-card">
+            <h3 class="card-title">Default Translation</h3>
+            <div class="form-row">
+              <div class="form-label-group">
+                <label for="defaultTranslation">Preferred Default Translation</label>
+                <span class="form-desc">The translation loaded by default when you hover any reference</span>
+              </div>
+              <select id="defaultTranslation" class="dash-select" style="min-width:260px;">
+                <optgroup label="English">
+                  <option value="BSB">BSB — Berean Standard (⚡ Bundled Offline)</option>
+                  <option value="KJV">KJV — King James Version</option>
+                  <option value="ESV">ESV — English Standard Version</option>
+                  <option value="NIV">NIV — New International Version</option>
+                  <option value="NLT">NLT — New Living Translation</option>
+                  <option value="NASB">NASB — New American Standard Bible</option>
+                  <option value="CSB">CSB — Christian Standard Bible</option>
+                  <option value="NKJV">NKJV — New King James Version</option>
+                  <option value="WEB">WEB — World English Bible</option>
+                </optgroup>
+                <optgroup label="🇺🇦 Ukrainian">
+                  <option value="TUR">TUR — Р. Турконяка (УБТ 2011)</option>
+                  <option value="UBIO">UBIO — Іван Огієнко (1962)</option>
+                </optgroup>
+                <optgroup label="🇪🇸 Spanish">
+                  <option value="LBLA">LBLA — La Biblia de las Américas</option>
+                  <option value="RV1960">RV1960 — Reina-Valera 1960</option>
+                </optgroup>
+                <optgroup label="🇵🇹 Portuguese">
+                  <option value="NAA">NAA — Nova Almeida Atualizada</option>
+                  <option value="ARA">ARA — Almeida Revista e Atualizada</option>
+                </optgroup>
+                <optgroup label="🇩🇪 German">
+                  <option value="SCH2000">SCH2000 — Schlachter 2000</option>
+                </optgroup>
+                <optgroup label="🇨🇳 Chinese">
+                  <option value="CUNPS">CUNPS — 和合本 简体</option>
+                  <option value="CUNP">CUNP — 和合本 繁體</option>
+                </optgroup>
+                <optgroup label="🇰🇷 Korean">
+                  <option value="KRV">KRV — 개역한글</option>
+                </optgroup>
+                <optgroup label="🇮🇳 Hindi">
+                  <option value="HIOV">HIOV — हिंदी O.V. (BSI)</option>
+                </optgroup>
+                <optgroup label="🇷🇺 Russian">
+                  <option value="SYNOD">SYNOD — Синодальный перевод</option>
+                  <option value="NRT">NRT — Новый русский перевод</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="form-row toggle-row" style="margin-top:16px;">
+              <div class="form-label-group">
+                <label for="showTranslationBar" style="cursor:pointer; font-weight:600;">Show Translation Bar in Card</label>
+                <span class="form-desc">Allow 1-click switching between translations directly in the popup card</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="showTranslationBar" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Translation Picker Grid -->
+          <div class="settings-card" style="margin-top:20px;">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Active Translations in Tooltip</h3>
+                <p class="card-desc">Check the translations you want visible in the hover bar. Unchecked translations won't clutter your view.</p>
+              </div>
+              <div class="quick-batch-btns">
+                <button type="button" id="btnSelectAllTrans" class="dash-mini-btn">Check All</button>
+                <button type="button" id="btnSelectCoreTrans" class="dash-mini-btn">English Only</button>
+              </div>
+            </div>
+
+            <!-- English Core Grid -->
+            <h4 class="group-title">English Translations</h4>
+            <div class="trans-cards-grid" id="coreTransGrid">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- International Grid -->
+            <h4 class="group-title" style="margin-top:20px;">International Translations</h4>
+            <div class="trans-cards-grid" id="intlTransGrid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: Commentaries & Resources -->
+        <section class="tab-pane" id="tab-commentaries">
+          <div class="pane-header">
+            <h2>Commentaries & Study Resources</h2>
+            <p>Access premier Reformed and evangelical commentaries with 4 distinct viewing modes.</p>
+          </div>
+
+          <div class="settings-card">
+            <h3 class="card-title">Commentary Display Mode</h3>
+            <p class="card-desc">Choose how commentary notes are presented when you hover or click:</p>
+
+            <div class="comm-modes-grid" id="commModesGrid">
+              <label class="comm-mode-card" data-mode="direct_link">
+                <input type="radio" name="commMode" value="direct_link" checked>
+                <div class="mode-card-content">
+                  <div class="mode-icon">↗</div>
+                  <div class="mode-info">
+                    <span class="mode-name">Option 1: Direct Link</span>
+                    <span class="mode-desc">Adds a 1-click button to open your preferred commentary directly in a new tab.</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="comm-mode-card" data-mode="in_card_tab">
+                <input type="radio" name="commMode" value="in_card_tab">
+                <div class="mode-card-content">
+                  <div class="mode-icon">⇄</div>
+                  <div class="mode-info">
+                    <span class="mode-name">Option 2: In-Card Tab</span>
+                    <span class="mode-desc">Toggle between scripture and commentary notes directly inside the hover card without leaving the page.</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="comm-mode-card" data-mode="side_drawer">
+                <input type="radio" name="commMode" value="side_drawer">
+                <div class="mode-card-content">
+                  <div class="mode-icon">⇥</div>
+                  <div class="mode-info">
+                    <span class="mode-name">Option 3: Side Drawer</span>
+                    <span class="mode-desc">Opens a full-height reading panel on the side of your screen with extensive multi-commentator notes.</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="comm-mode-card" data-mode="multi_pills">
+                <input type="radio" name="commMode" value="multi_pills">
+                <div class="mode-card-content">
+                  <div class="mode-icon">⋯</div>
+                  <div class="mode-info">
+                    <span class="mode-name">Option 4: Multi-Resource Pills</span>
+                    <span class="mode-desc">Renders multiple customizable resource links in the footer (Commentaries, TGC, Audio Bible, YouTube).</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-card" style="margin-top:20px;">
+            <h3 class="card-title">Commentary Source & Links</h3>
+
+            <div class="form-row">
+              <div class="form-label-group">
+                <label for="preferredCommentary">Preferred Commentary Source</label>
+                <span class="form-desc">Primary author used when linking to commentary or opening notes</span>
+              </div>
+              <select id="preferredCommentary" class="dash-select" style="min-width:280px;">
+                <option value="matthew_henry">Matthew Henry Commentary</option>
+                <option value="john_calvin">John Calvin Commentaries</option>
+                <option value="jfb">Jamieson-Fausset-Brown (JFB)</option>
+                <option value="maclaren">Alexander MacLaren Expositions</option>
+                <option value="biblehub_all">BibleHub All (Multi-Commentator)</option>
+                <option value="john_gill">John Gill Exposition</option>
+                <option value="geneva_1599">Geneva Study Bible (1599 Notes)</option>
+                <option value="tgc">The Gospel Coalition (TGC)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-label-group">
+                <label for="studyResource">Default External Study Resource</label>
+                <span class="form-desc">Site linked by the "Study ↗" button in the card footer</span>
+              </div>
+              <select id="studyResource" class="dash-select" style="min-width:280px;">
+                <option value="biblehub">BibleHub.com</option>
+                <option value="thesingingbible">TheSinging.Bible (Audio)</option>
+                <option value="bible_com">Bible.com</option>
+                <option value="youversion">YouVersion</option>
+                <option value="desiringgod">DesiringGod.com</option>
+                <option value="youtube">YouTube (Sermons)</option>
+              </select>
+            </div>
+
+            <!-- Option 4 Multi Pills Config -->
+            <div id="multiPillsSection" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color); display:none;">
+              <label style="font-weight:600; font-size:12.5px; display:block; margin-bottom:8px;">Active Footer Resource Pills (Option 4):</label>
+              <div class="pills-picker-row">
+                <label class="dash-chip"><input type="checkbox" value="commentary" checked><span>💬 Commentaries</span></label>
+                <label class="dash-chip"><input type="checkbox" value="tgc" checked><span>🏛 TGC</span></label>
+                <label class="dash-chip"><input type="checkbox" value="thesingingbible" checked><span>🎵 TheSinging.Bible</span></label>
+                <label class="dash-chip"><input type="checkbox" value="youtube" checked><span>📺 YouTube</span></label>
+                <label class="dash-chip"><input type="checkbox" value="bible_com"><span>📖 Bible.com</span></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: Offline Storage & Database -->
+        <section class="tab-pane" id="tab-offline">
+          <div class="pane-header">
+            <h2>Offline Storage & Downloads</h2>
+            <p>Manage downloaded 66-book Bibles and chapter caches. Keep your extension lightweight.</p>
+          </div>
+
+          <!-- Metrics summary cards -->
+          <div class="stats-cards-grid">
+            <div class="stat-card">
+              <span class="stat-number green">0ms</span>
+              <span class="stat-title">BSB (Berean Standard)</span>
+              <span class="stat-subtitle">Pre-Bundled Offline (Always Fast)</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number blue" id="statDownloadedCount">0</span>
+              <span class="stat-title">Downloaded Full Bibles</span>
+              <span class="stat-subtitle">Stored in IndexedDB (~3-4 MB each)</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number purple" id="statCachedCount">0 / 100</span>
+              <span class="stat-title">Cached Chapters</span>
+              <span class="stat-subtitle">14-Day Auto-Prune Enabled</span>
+            </div>
+          </div>
+
+          <!-- Downloaded Bibles Section -->
+          <div class="settings-card" id="offlineDownloadedSection" style="margin-top:20px;">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Downloaded Offline Translations</h3>
+                <p class="card-desc">These full 66-book Bibles are stored on your PC for instant 0ms offline access.</p>
+              </div>
+            </div>
+
+            <div id="offlineDownloadedList" class="offline-table-container">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Download New Bible -->
+          <div class="settings-card" style="margin-top:20px;">
+            <h3 class="card-title">Download Full Translation (66 Books)</h3>
+            <p class="card-desc">Download an entire translation to your PC for 100% offline reading with zero network requests.</p>
+
+            <div class="download-action-row">
+              <select id="dashDownloadSelect" class="dash-select" style="flex:1;">
+                <optgroup label="English">
+                  <option value="KJV">KJV — King James (Full 66 Books, ~4.2 MB)</option>
+                  <option value="ESV">ESV — English Standard (Full 66 Books, ~4.0 MB)</option>
+                  <option value="NLT">NLT — New Living (Full 66 Books, ~3.9 MB)</option>
+                  <option value="NASB">NASB — New American Standard (Full 66 Books, ~4.1 MB)</option>
+                  <option value="CSB">CSB — Christian Standard (Full 66 Books, ~4.0 MB)</option>
+                  <option value="NKJV">NKJV — New King James (Full 66 Books, ~4.1 MB)</option>
+                  <option value="WEB">WEB — World English Bible (Full 66 Books, ~3.8 MB)</option>
+                </optgroup>
+                <optgroup label="🇺🇦 Ukrainian">
+                  <option value="TUR">TUR — Р. Турконяка (Повний переклад, ~4.3 MB)</option>
+                  <option value="UBIO">UBIO — Іван Огієнко (Повна Біблія, ~4.4 MB)</option>
+                </optgroup>
+                <optgroup label="🇪🇸 Spanish">
+                  <option value="LBLA">LBLA — La Biblia de las Américas (~4.2 MB)</option>
+                  <option value="RV1960">RV1960 — Reina-Valera 1960 (~4.1 MB)</option>
+                </optgroup>
+                <optgroup label="🇵🇹 Portuguese">
+                  <option value="NAA">NAA — Nova Almeida Atualizada (~4.1 MB)</option>
+                  <option value="ARA">ARA — Almeida Revista e Atualizada (~4.0 MB)</option>
+                </optgroup>
+                <optgroup label="🇩🇪 German">
+                  <option value="SCH2000">SCH2000 — Schlachter 2000 (~4.3 MB)</option>
+                </optgroup>
+                <optgroup label="🇨🇳 Chinese">
+                  <option value="CUNPS">CUNPS — 和合本 简体 (~3.2 MB)</option>
+                  <option value="CUNP">CUNP — 和合本 繁體 (~3.2 MB)</option>
+                </optgroup>
+                <optgroup label="🇰🇷 Korean">
+                  <option value="KRV">KRV — 개역한글 (~3.4 MB)</option>
+                </optgroup>
+                <optgroup label="🇮🇳 Hindi">
+                  <option value="HIOV">HIOV — हिंदी O.V. (~4.5 MB)</option>
+                </optgroup>
+                <optgroup label="🇷🇺 Russian">
+                  <option value="SYNOD">SYNOD — Синодальный перевод (~4.6 MB)</option>
+                  <option value="NRT">NRT — Новый русский перевод (~4.4 MB)</option>
+                </optgroup>
+              </select>
+              <button id="dashDownloadBtn" class="dash-btn primary">Download Offline</button>
+            </div>
+            <div id="dashDownloadProgress" class="dash-alert" style="display:none; margin-top:10px;"></div>
+          </div>
+
+          <!-- Chapter Cache Manager -->
+          <div class="settings-card" style="margin-top:20px;">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Chapter Cache (Online Lookups)</h3>
+                <p class="card-desc">Chapters viewed online are automatically cached locally with an automatic 100-chapter cap and 14-day expiry to keep Bible Hover ultra-lightweight.</p>
+              </div>
+              <button id="dashClearCacheBtn" class="dash-btn danger">Clear Chapter Cache</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: Disabled Sites -->
+        <section class="tab-pane" id="tab-sites">
+          <div class="pane-header">
+            <h2>Disabled Sites (Blocklist)</h2>
+            <p>Specify domains where you want Bible Hover to be completely disabled.</p>
+          </div>
+
+          <div class="settings-card">
+            <h3 class="card-title">Add Disabled Website</h3>
+            <div class="add-site-row">
+              <input type="text" id="addDomainInput" placeholder="example.com or mail.google.com" class="dash-input" style="flex:1;">
+              <button id="addDomainBtn" class="dash-btn primary">Add Site</button>
+            </div>
+          </div>
+
+          <div class="settings-card" style="margin-top:20px;">
+            <h3 class="card-title">Currently Disabled Websites</h3>
+            <div id="disabledSitesList" class="disabled-sites-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 6: Scripture Sandbox -->
+        <section class="tab-pane" id="tab-sandbox">
+          <div class="pane-header">
+            <h2>Scripture Sandbox & Tester</h2>
+            <p>Quickly search and preview any verse or chapter across translations in full widescreen.</p>
+          </div>
+
+          <div class="settings-card">
+            <div class="sandbox-search-row">
+              <input type="text" id="sandboxInput" placeholder="Search reference (e.g. John 3:16, Romans 8:28, Psalm 23, Gen 1)..." class="dash-input" style="flex:1;">
+              <select id="sandboxTransSelect" class="dash-select" style="min-width:140px;">
+                <option value="BSB">BSB</option>
+                <option value="KJV">KJV</option>
+                <option value="ESV">ESV</option>
+                <option value="NIV">NIV</option>
+                <option value="NLT">NLT</option>
+                <option value="NASB">NASB</option>
+                <option value="CSB">CSB</option>
+                <option value="NKJV">NKJV</option>
+                <option value="WEB">WEB</option>
+                <option value="TUR">TUR (Ukr)</option>
+                <option value="LBLA">LBLA (Spa)</option>
+              </select>
+              <button id="sandboxSearchBtn" class="dash-btn primary">Lookup</button>
+            </div>
+
+            <div id="sandboxResultBox" class="sandbox-result-box" style="display:none; margin-top:16px;">
+              <div class="sandbox-result-header">
+                <div>
+                  <h3 id="sandboxResultTitle" class="sandbox-title"></h3>
+                  <span id="sandboxResultSource" class="sandbox-source-badge"></span>
+                </div>
+                <div class="sandbox-actions">
+                  <button id="sandboxFullChBtn" class="dash-mini-btn">Full Chapter</button>
+                  <button id="sandboxCopyBtn" class="dash-mini-btn">Copy</button>
+                </div>
+              </div>
+              <div id="sandboxResultBody" class="sandbox-body"></div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../shared/bible-metadata.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

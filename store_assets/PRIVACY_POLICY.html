@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Bible Hover</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+      color: #1f2937;
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f9fafb;
+    }
+    .card {
+      background: #ffffff;
+      padding: 36px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid #e5e7eb;
+    }
+    h1 { font-size: 26px; color: #111827; margin-bottom: 6px; }
+    .updated { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    h2 { font-size: 18px; color: #1e3a8a; margin-top: 24px; margin-bottom: 10px; border-bottom: 1px solid #f3f4f6; padding-bottom: 6px; }
+    p, li { font-size: 15px; color: #374151; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13.5px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Privacy Policy for Bible Hover</h1>
+    <div class="updated">Last Updated: October 28, 2026</div>
+
+    <p>Bible Hover ("we", "our", or "the extension") is committed to protecting your privacy. This Privacy Policy explains our practices regarding user information.</p>
+
+    <h2>1. No Collection of Personal Information</h2>
+    <p>Bible Hover does <strong>not</strong> collect, store, transmit, or sell any personally identifiable information (such as your name, email address, IP address, browsing history, or physical location).</p>
+
+    <h2>2. Local Storage and Offline Data</h2>
+    <p>All extension preferences (such as selected theme, font size, scripture font family, enabled translations, and preferred commentary modes) and downloaded offline Bibles are saved <strong>exclusively on your local device</strong> using Chrome's built-in <code>chrome.storage.local</code> and IndexedDB APIs. This data never leaves your computer and is never transmitted to any external server controlled by Bible Hover.</p>
+
+    <h2>3. Network Requests & Third-Party APIs</h2>
+    <p>Bible Hover is designed with an offline-first architecture. The Berean Standard Bible (BSB) is bundled directly with the extension and requires zero internet connectivity.</p>
+    <p>When you choose to view translations or resources that are not stored offline, the extension makes direct HTTPS requests to public scripture services:</p>
+    <ul>
+      <li><strong>Bolls Bible API</strong> (<code>https://bolls.life/</code>)</li>
+      <li><strong>BiblePortal API</strong> (<code>https://api.bibleportal.com/</code>)</li>
+      <li><strong>BibleHub</strong> (<code>https://biblehub.com/</code>)</li>
+    </ul>
+    <p>These requests only transmit the requested book, chapter, and verse query to fetch the biblical text. No personal identifiers, cookies, or user tracking tokens are included in these requests.</p>
+
+    <h2>4. Webpage Content & Script Execution</h2>
+    <p>Bible Hover scans webpage text locally on your device to recognize biblical scripture citations (such as "John 3:16" or "Romans 8:28") and attach hover preview cards. The contents of the webpages you visit are processed entirely in memory within your browser and are never logged, recorded, or sent to any server.</p>
+
+    <h2>5. Changes to This Policy</h2>
+    <p>If we update this Privacy Policy in the future, the revised version will be posted here with an updated "Last Updated" date.</p>
+
+    <h2>6. Contact Us</h2>
+    <p>If you have any questions or feedback regarding this Privacy Policy or Bible Hover, please contact the developer via the Chrome Web Store support page.</p>
+  </div>
+</body>
+</html>

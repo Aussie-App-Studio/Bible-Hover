@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Hover</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <img src="../icons/icon32.png" alt="Bible Hover Logo" class="app-icon">
+        <div>
+          <h1 class="app-title">Bible Hover</h1>
+          <p class="app-subtitle">Instant Scripture Previews</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="openDashboardBtn" class="icon-header-btn" title="Open Settings Dashboard">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+          </svg>
+        </button>
+        <label class="switch" title="Toggle Bible Hover on/off">
+          <input type="checkbox" id="globalToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </header>
+
+    <!-- Quick Verse Lookup -->
+    <section class="section search-section">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search reference (e.g. John 3:16, Rom 8:28)..." spellcheck="false" autocomplete="off">
+        <button id="searchBtn" title="Search">
+          <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </button>
+      </div>
+      <div id="quickResult" class="quick-result" style="display: none;">
+        <div class="result-header">
+          <span id="resultTitle" class="result-title"></span>
+          <button id="resultCopyBtn" class="mini-btn">Copy</button>
+        </div>
+        <div id="resultBody" class="result-body"></div>
+      </div>
+    </section>
+
+    <!-- Site Specific Toggle -->
+    <section class="section site-section">
+      <div class="site-row">
+        <div class="site-info">
+          <span class="site-label">Current Site</span>
+          <span id="currentDomain" class="site-domain">loading...</span>
+        </div>
+        <button id="siteToggleBtn" class="pill-btn">Enabled</button>
+      </div>
+    </section>
+
+    <!-- Settings Tabs / Accordion -->
+    <section class="section settings-section">
+      <h2 class="section-title">Preferences</h2>
+
+      <!-- Default Translation -->
+      <div class="setting-row">
+        <label for="defaultTranslation">Default Translation</label>
+        <select id="defaultTranslation" class="select-input">
+          <optgroup label="English">
+            <option value="BSB">BSB — Berean Standard (⚡ Bundled Offline)</option>
+            <option value="KJV">KJV — King James (Online / Cached)</option>
+            <option value="ESV">ESV — English Standard (Online / Cached)</option>
+            <option value="NIV">NIV — New International (Online / Cached)</option>
+            <option value="NLT">NLT — New Living (Online / Cached)</option>
+            <option value="NASB">NASB — New American Standard (Online / Cached)</option>
+            <option value="CSB">CSB — Christian Standard (Online / Cached)</option>
+            <option value="NKJV">NKJV — New King James (Online / Cached)</option>
+            <option value="WEB">WEB — World English (Online / Cached)</option>
+          </optgroup>
+          <optgroup label="🇺🇦 Ukrainian (Українська)">
+            <option value="TUR">TUR — Р. Турконяка (2011)</option>
+            <option value="UBIO">UBIO — Іван Огієнко (1962)</option>
+          </optgroup>
+          <optgroup label="🇪🇸 Spanish (Español)">
+            <option value="LBLA">LBLA — La Biblia de las Américas</option>
+            <option value="RV1960">RV1960 — Reina-Valera 1960</option>
+          </optgroup>
+          <optgroup label="🇵🇹 Portuguese (Português)">
+            <option value="NAA">NAA — Nova Almeida Atualizada (2017)</option>
+            <option value="ARA">ARA — Almeida Revista e Atualizada</option>
+          </optgroup>
+          <optgroup label="🇩🇪 German (Deutsch)">
+            <option value="SCH2000">SCH2000 — Schlachter 2000</option>
+          </optgroup>
+          <optgroup label="🇨🇳 Chinese (中文)">
+            <option value="CUNPS">CUNPS — 和合本 (简体)</option>
+            <option value="CUNP">CUNP — 和合本 (繁體)</option>
+          </optgroup>
+          <optgroup label="🇰🇷 Korean (한국어)">
+            <option value="KRV">KRV — 개역한글</option>
+          </optgroup>
+          <optgroup label="🇮🇳 Hindi (हिन्दी)">
+            <option value="HIOV">HIOV — हिंदी O.V. (BSI)</option>
+          </optgroup>
+          <optgroup label="🇷🇺 Russian (Русский)">
+            <option value="SYNOD">SYNOD — Синодальный перевод</option>
+            <option value="NRT">NRT — Новый русский перевод (НРП)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Study Resource Link -->
+      <div class="setting-row">
+        <label for="studyResource">Study Resource</label>
+        <select id="studyResource" class="select-input">
+          <option value="biblehub">BibleHub.com</option>
+          <option value="thesingingbible">TheSinging.Bible (Audio)</option>
+          <option value="bible_com">Bible.com</option>
+          <option value="youversion">YouVersion</option>
+          <option value="desiringgod">DesiringGod.com</option>
+          <option value="youtube">YouTube (Sermons)</option>
+        </select>
+      </div>
+
+      <!-- Minimalist Mode (Pure Scripture Only) -->
+      <div class="setting-row">
+        <div>
+          <label for="minimalistMode" style="font-weight: 600; cursor: pointer;">Pure Scripture Mode (Minimalist)</label>
+          <p class="setting-hint" style="margin-top: 1px;">Removes all translations, links, footers & buttons</p>
+        </div>
+        <label class="switch mini-switch" title="Toggle Minimalist Scripture-Only Mode">
+          <input type="checkbox" id="minimalistMode">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Visible Translations in Tooltip -->
+      <div class="setting-block">
+        <div class="setting-row" style="margin-bottom: 6px;">
+          <label for="showTranslationBar">Show Translation Bar</label>
+          <label class="switch mini-switch">
+            <input type="checkbox" id="showTranslationBar" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="translation-chips" id="translationChips">
+          <label class="trans-chip" data-trans="BSB"><input type="checkbox" value="BSB" checked><span>BSB</span></label>
+          <label class="trans-chip" data-trans="KJV"><input type="checkbox" value="KJV" checked><span>KJV</span></label>
+          <label class="trans-chip" data-trans="ESV"><input type="checkbox" value="ESV" checked><span>ESV</span></label>
+          <label class="trans-chip" data-trans="NIV"><input type="checkbox" value="NIV" checked><span>NIV</span></label>
+          <label class="trans-chip" data-trans="NLT"><input type="checkbox" value="NLT" checked><span>NLT</span></label>
+          <label class="trans-chip" data-trans="NASB"><input type="checkbox" value="NASB" checked><span>NASB</span></label>
+          <label class="trans-chip" data-trans="CSB"><input type="checkbox" value="CSB" checked><span>CSB</span></label>
+          <label class="trans-chip" data-trans="NKJV"><input type="checkbox" value="NKJV" checked><span>NKJV</span></label>
+          <label class="trans-chip" data-trans="WEB"><input type="checkbox" value="WEB" checked><span>WEB</span></label>
+        </div>
+
+        <!-- International Translations (Off by Default) -->
+        <div class="intl-trans-header">
+          <span class="intl-trans-title">More Languages <span id="intlActiveCount" class="intl-active-count" style="display:none;"></span></span>
+          <button type="button" id="toggleIntlLangsBtn" class="intl-toggle-btn">+ Languages</button>
+        </div>
+        <div id="intlTransContainer" class="intl-trans-container" style="display: none;">
+          <div class="lang-group">
+            <div class="lang-title">🇺🇦 Ukrainian (Українська)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="TUR"><input type="checkbox" value="TUR"><span>TUR (Р. Турконяка)</span></label>
+              <label class="trans-chip" data-trans="UBIO"><input type="checkbox" value="UBIO"><span>UBIO (Огієнко)</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇪🇸 Spanish (Español)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="LBLA"><input type="checkbox" value="LBLA"><span>LBLA (Américas)</span></label>
+              <label class="trans-chip" data-trans="RV1960"><input type="checkbox" value="RV1960"><span>RV1960</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇵🇹 Portuguese (Português)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="NAA"><input type="checkbox" value="NAA"><span>NAA (Atualizada)</span></label>
+              <label class="trans-chip" data-trans="ARA"><input type="checkbox" value="ARA"><span>ARA (Revista)</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇩🇪 German (Deutsch)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="SCH2000"><input type="checkbox" value="SCH2000"><span>SCH2000 (Schlachter)</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇨🇳 Chinese (中文)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="CUNPS"><input type="checkbox" value="CUNPS"><span>和合本 (简体)</span></label>
+              <label class="trans-chip" data-trans="CUNP"><input type="checkbox" value="CUNP"><span>和合本 (繁體)</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇰🇷 Korean (한국어)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="KRV"><input type="checkbox" value="KRV"><span>KRV (개역한글)</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇮🇳 Hindi (हिन्दी)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="HIOV"><input type="checkbox" value="HIOV"><span>HIOV (समकालीन)</span></label>
+            </div>
+          </div>
+          <div class="lang-group">
+            <div class="lang-title">🇷🇺 Russian (Русский)</div>
+            <div class="translation-chips">
+              <label class="trans-chip" data-trans="SYNOD"><input type="checkbox" value="SYNOD"><span>Синодальный (1876)</span></label>
+              <label class="trans-chip" data-trans="NRT"><input type="checkbox" value="NRT"><span>НРП (Новый русский)</span></label>
+            </div>
+          </div>
+        </div>
+
+        <p class="setting-hint">Uncheck translations you never use, or turn off the switch to only show your default translation.</p>
+      </div>
+
+      <!-- Commentary Integration (4 Modes) -->
+      <div class="setting-block" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color, #e5e7eb);">
+        <div class="setting-row">
+          <label for="commentaryMode">Commentary Mode</label>
+          <select id="commentaryMode" class="select-input">
+            <option value="direct_link">Option 1: Direct Link (New Tab)</option>
+            <option value="in_card_tab">Option 2: In-Card Tab (Scripture ↔ Notes)</option>
+            <option value="side_drawer">Option 3: Side Drawer (Full Height)</option>
+            <option value="multi_pills">Option 4: Multi-Resource Pills (All in Footer)</option>
+          </select>
+        </div>
+
+        <div class="setting-row" id="prefCommentaryRow">
+          <label for="preferredCommentary">Commentary Source</label>
+          <select id="preferredCommentary" class="select-input">
+            <option value="matthew_henry">Matthew Henry Commentary</option>
+            <option value="john_calvin">John Calvin Commentaries</option>
+            <option value="jfb">Jamieson-Fausset-Brown (JFB)</option>
+            <option value="maclaren">Alexander MacLaren Expositions</option>
+            <option value="biblehub_all">BibleHub All (Multi-Commentator)</option>
+            <option value="john_gill">John Gill Exposition</option>
+            <option value="geneva_1599">Geneva Study Bible (1599 Notes)</option>
+            <option value="tgc">The Gospel Coalition (TGC)</option>
+          </select>
+        </div>
+
+        <div id="multiPillsConfig" style="display: none; margin-top: 8px;">
+          <label style="font-size: 12px; font-weight: 600; color: #4b5563; display:block; margin-bottom: 4px;">Active Footer Pills:</label>
+          <div class="translation-chips" id="multiPillChips">
+            <label class="trans-chip"><input type="checkbox" value="commentary" checked><span>💬 Commentaries</span></label>
+            <label class="trans-chip"><input type="checkbox" value="tgc" checked><span>🏛 TGC</span></label>
+            <label class="trans-chip"><input type="checkbox" value="thesingingbible" checked><span>🎵 TheSinging.Bible</span></label>
+            <label class="trans-chip"><input type="checkbox" value="youtube" checked><span>📺 YouTube</span></label>
+            <label class="trans-chip"><input type="checkbox" value="bible_com"><span>📖 Bible.com</span></label>
+          </div>
+        </div>
+        <p class="setting-hint" id="commentaryHint">Adds a 1-click button to open your preferred commentary in a new tab.</p>
+      </div>
+
+      <!-- Theme -->
+      <div class="setting-row">
+        <label for="themeSelect">Theme</label>
+        <select id="themeSelect" class="select-input">
+          <option value="auto">Auto (System)</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="sepia">Warm Sepia</option>
+        </select>
+      </div>
+
+      <!-- Underline Style -->
+      <div class="setting-row">
+        <label for="underlineStyle">Underline Style</label>
+        <select id="underlineStyle" class="select-input">
+          <option value="dotted">Dotted Underline</option>
+          <option value="dashed">Dashed Underline</option>
+          <option value="solid">Solid Underline</option>
+          <option value="highlight">Subtle Highlight</option>
+          <option value="none">No Underline (Hover Only)</option>
+        </select>
+      </div>
+
+      <!-- Accent Color -->
+      <div class="setting-row">
+        <label for="underlineColor">Accent Color</label>
+        <div class="color-picker-group">
+          <input type="color" id="underlineColor" value="#3b82f6" class="color-input">
+          <div class="color-presets">
+            <span class="color-preset" data-color="#3b82f6" style="background:#3b82f6;"></span>
+            <span class="color-preset" data-color="#10b981" style="background:#10b981;"></span>
+            <span class="color-preset" data-color="#8b5cf6" style="background:#8b5cf6;"></span>
+            <span class="color-preset" data-color="#d97706" style="background:#d97706;"></span>
+            <span class="color-preset" data-color="#ef4444" style="background:#ef4444;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Font Size -->
+      <div class="setting-row">
+        <label for="fontSizeSelect">Tooltip Font Size</label>
+        <select id="fontSizeSelect" class="select-input">
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+
+      <!-- Scripture Font Family -->
+      <div class="setting-row">
+        <label for="scriptureFont">Scripture Font</label>
+        <select id="scriptureFont" class="select-input">
+          <option value="sans">Modern Sans (Default)</option>
+          <option value="serif">Classic Bible Serif (Georgia)</option>
+          <option value="garamond">Elegant Garamond</option>
+          <option value="humanist">Humanist Sans (Calibri)</option>
+          <option value="dyslexic">Dyslexia-Friendly</option>
+          <option value="mono">Study Monospace</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Offline Management -->
+    <section class="section offline-section">
+      <h2 class="section-title">Offline Translations & Storage</h2>
+      <div class="offline-status-box">
+        <div class="status-item">
+          <span class="status-label">Bundled (0ms):</span>
+          <span class="status-val highlight">BSB (Berean Standard)</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Cached Chapters:</span>
+          <span id="cachedChaptersCount" class="status-val">0</span>
+        </div>
+      </div>
+
+      <!-- Downloaded Offline Translations List -->
+      <div id="downloadedSection" class="downloaded-section" style="display: none;">
+        <div class="downloaded-header">
+          <span class="downloaded-title">Downloaded Offline (Full Bibles)</span>
+          <span id="downloadedCountBadge" class="downloaded-count-badge">0</span>
+        </div>
+        <div id="downloadedList" class="downloaded-list"></div>
+      </div>
+
+      <div class="download-group">
+        <select id="downloadSelect" class="select-input" style="flex:1;">
+          <optgroup label="English">
+            <option value="KJV">Download KJV (Full 66 Books)</option>
+            <option value="ESV">Download ESV (Full 66 Books)</option>
+            <option value="NLT">Download NLT (Full 66 Books)</option>
+            <option value="NASB">Download NASB (Full 66 Books)</option>
+            <option value="CSB">Download CSB (Full 66 Books)</option>
+            <option value="NKJV">Download NKJV (Full 66 Books)</option>
+            <option value="WEB">Download WEB (Full 66 Books)</option>
+          </optgroup>
+          <optgroup label="🇺🇦 Ukrainian">
+            <option value="TUR">Download TUR — Р. Турконяка (Full Bible)</option>
+            <option value="UBIO">Download UBIO — Іван Огієнко (Full Bible)</option>
+          </optgroup>
+          <optgroup label="🇪🇸 Spanish">
+            <option value="LBLA">Download LBLA — La Biblia de las Américas</option>
+            <option value="RV1960">Download RV1960 — Reina-Valera 1960</option>
+          </optgroup>
+          <optgroup label="🇵🇹 Portuguese">
+            <option value="NAA">Download NAA — Nova Almeida Atualizada</option>
+            <option value="ARA">Download ARA — Almeida Revista e Atualizada</option>
+          </optgroup>
+          <optgroup label="🇩🇪 German">
+            <option value="SCH2000">Download SCH2000 — Schlachter 2000</option>
+          </optgroup>
+          <optgroup label="🇨🇳 Chinese">
+            <option value="CUNPS">Download CUNPS — 和合本 简体</option>
+            <option value="CUNP">Download CUNP — 和合本 繁體</option>
+          </optgroup>
+          <optgroup label="🇰🇷 Korean">
+            <option value="KRV">Download KRV — 개역한글</option>
+          </optgroup>
+          <optgroup label="🇮🇳 Hindi">
+            <option value="HIOV">Download HIOV — हिंदी O.V.</option>
+          </optgroup>
+          <optgroup label="🇷🇺 Russian">
+            <option value="SYNOD">Download SYNOD — Синодальный перевод</option>
+            <option value="NRT">Download NRT — Новый русский перевод</option>
+          </optgroup>
+        </select>
+        <button id="downloadBtn" class="pill-btn primary">Download</button>
+      </div>
+
+      <div id="downloadProgress" class="download-msg" style="display:none;"></div>
+
+      <div class="cache-actions">
+        <button id="clearCacheBtn" class="text-btn danger">Clear Chapter Cache</button>
+      </div>
+      <p class="setting-hint" style="margin-top: 8px;">Online chapters are automatically managed with a 100-chapter cap (~1.5 MB) and 14-day auto-expiry to keep the extension ultra-lightweight.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Bible Hover v1.0 • 100% Offline Capable</span>
+      <span style="margin: 0 4px; opacity: 0.5;">•</span>
+      <a href="#" id="footerDashboardLink" style="color: var(--accent-color); text-decoration: underline; font-weight: 500;">Dashboard ↗</a>
+    </footer>
+  </div>
+
+  <script src="../shared/bible-metadata.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
