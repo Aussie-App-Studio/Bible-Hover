@@ -105,4 +105,5 @@ Run the PowerShell packager to generate a clean, store-ready ZIP in `dist/`:
 ---
 
 ## 📄 License
-MIT License. See [LICENSE](LICENSE) for details.
+GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE) for details.
+Anyone who modifies or redistributes this software must release their source code under the exact same GPL terms.
