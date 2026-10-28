@@ -1,0 +1,95 @@
+Bible Hover is a free and 100% open-source Chrome extension that transforms how you read scripture on the web. Whenever you visit any webpage, article, sermon, or study guide, Bible Hover automatically detects Bible references and displays instant, elegant hover preview cards with zero interruption to your reading.
+
+No ads. No tracking. No subscriptions. 100% Free & Open Source under the GNU General Public License (GPLv3).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ INSTANT 0ms OFFLINE ENGINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Bundled Berean Standard Bible (BSB): The complete Bible is pre-bundled directly within the extension. Hover previews appear in 0 milliseconds with zero network requests and zero latency.
+• Complete Offline Capability: Works entirely offline on flights, commutes, or areas with poor internet connection.
+• Offline Bibles Manager: Easily download additional full translations (such as the King James Version) into local browser storage with 1-click management and instant removal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📖 MULTI-TRANSLATION & GLOBAL LANGUAGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Compare translations on the fly: Click interactive translation pills inside the hover card to view the exact same verse in different translations without leaving the card.
+• Major English Translations:
+  - BSB (Berean Standard Bible — bundled offline)
+  - KJV (King James Version — downloadable offline)
+  - ESV (English Standard Version)
+  - NIV (New International Version)
+  - NLT (New Living Translation)
+  - NASB (New American Standard Bible)
+  - CSB (Christian Standard Bible)
+  - NKJV (New King James Version)
+  - WEB (World English Bible)
+• Global International Languages:
+  - 🇺🇦 Ukrainian (Р. Турконяка 2011, Іван Огієнко 1962)
+  - 🇪🇸 Spanish (La Biblia de las Américas, Reina-Valera 1960)
+  - 🇵🇹 Portuguese (Nova Almeida Atualizada, Almeida Revista e Atualizada)
+  - 🇩🇪 German (Schlachter 2000)
+  - 🇨🇳 Chinese (和合本 简体 & 繁體)
+  - 🇰🇷 Korean (개역한글)
+  - 🇮🇳 Hindi (हिंदी O.V. BSI)
+  - 🇷🇺 Russian (Синодальный перевод, Новый русский перевод)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💬 REFORMED & CLASSIC STUDY COMMENTARIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Deepen your biblical study with direct integration into respected historical commentators and scholars:
+• Matthew Henry Exposition of the Old and New Testaments
+• John Calvin Commentaries
+• Jamieson-Fausset-Brown (JFB) Critical & Explanatory Commentary
+• Alexander MacLaren Expositions of Holy Scripture
+• John Gill Exposition of the Entire Bible
+• Geneva Study Bible (1599 Reformers' Notes)
+• The Gospel Coalition (TGC) Commentary Series
+
+Choose from 4 flexible commentary display modes:
+1. Direct 1-Click Link: Instant button to open chapter/verse commentary on BibleHub or TGC.
+2. In-Card Interactive Tabs: Scrollable commentary tabs right inside the hover card.
+3. Multi-Action Resource Pills: Quick-access buttons for Commentaries, TGC, TheSinging.Bible (audio singing scripture), and YouTube sermons.
+4. Side Drawer Reader: Slide out an unobtrusive reading drawer to examine extensive study notes side-by-side with your article.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 CUSTOM TYPOGRAPHY & ACCESSIBILITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bible Hover features selective typography: your font choice is applied exclusively to the sacred scripture verse text, keeping buttons, headers, and UI chrome crisp and clean in modern system sans.
+
+• Tailored Font Stacks:
+  - Modern Sans (Default): Clean, neutral contemporary reading.
+  - Classic Bible Serif: Traditional book typography featuring Georgia and Palatino.
+  - Elegant Garamond: Distinguished, warm editorial typography.
+  - Humanist Sans: Rounded, gentle letterforms (Calibri / Candara) that reduce eye fatigue.
+  - Dyslexia-Friendly: Research-backed accessibility stack (OpenDyslexic, Comic Sans, Verdana) with +0.04em letter-spacing, +0.08em word-spacing, and 1.82 line-height to reduce visual crowding and character confusion.
+  - Study Monospace: Fixed-width code typography for analytical cross-referencing.
+• 4 Comfortable Color Themes: Auto (System match), Crisp Light, OLED Dark, and Warm Sepia (Book Style).
+• Pure Scripture Mode (Minimalist): Strip away buttons, links, and chrome for a clean, distraction-free reading experience.
+• Text Size Control: Compact (13px), Default (14.5px), and Spacious (16px).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ ADVANCED CONTROL & REAL-TIME DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Full-Tab Options Dashboard: Access a dedicated settings page with a real-time live preview card, translations manager, commentary preferences, and offline storage controls.
+• Scripture Sandbox: Test and preview any Bible reference or search query instantly from within your settings.
+• Underline Customization: Choose dotted, dashed, solid, subtle highlight, or no underline (hover only).
+• Custom Accent Color: Personalize your active pills and highlights with custom color swatches.
+• Configurable Hover Delay: Fine-tune the milliseconds before a card appears to prevent accidental popups while scrolling.
+• Domain Blocklist: Easily disable Bible Hover on specific websites with a single click.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔒 100% PRIVATE, ETHICAL & OPEN SOURCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Zero Tracking & Analytics: Bible Hover contains no analytics SDKs, no tracking pixels, and no telemetry.
+• Zero Data Collection: Your browsing history, visited pages, and scriptures viewed are never tracked, collected, or transmitted to any server.
+• Completely Local: All preferences and downloaded offline Bibles reside entirely within your browser's local storage (chrome.storage.local and IndexedDB).
+• Free & Open Source: Licensed under the GNU General Public License v3.0 (GPL-3.0). You can inspect the source code, verify our privacy practices, or contribute to the project on GitHub:
+  https://github.com/Aussie-App-Studio/Bible-Hover
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 HOW TO USE BIBLE HOVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Install the extension.
+2. Browse any webpage, blog post, theological essay, or commentary that mentions scripture references (e.g., Romans 6:7, John 3:16, or Genesis 1:1-3).
+3. Simply hover your cursor over the highlighted reference to view the verse instantly.
+4. Click translation pills to compare translations, or click the commentary button to delve deeper into study notes!
