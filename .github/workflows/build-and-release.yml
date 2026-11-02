@@ -12,6 +12,8 @@ jobs:
   build:
     name: Package Chrome Extension
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
