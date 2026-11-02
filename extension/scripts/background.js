@@ -25,7 +25,11 @@ const DEFAULT_SETTINGS = {
   disabledDomains: [],
   commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
   preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
-  multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube']
+  multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube'],
+  installDate: null,
+  lastPromptDate: null,
+  hasRatedOrShared: false,
+  verseHoverCount: 0
 };
 
 // In-memory caches for instant 0ms lookups
@@ -262,6 +266,9 @@ chrome.runtime.onInstalled.addListener(async () => {
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
     if (stored[k] === undefined) toSet[k] = v;
   }
+  if (!stored.installDate) {
+    toSet.installDate = Date.now();
+  }
   if (Object.keys(toSet).length > 0) {
     await chrome.storage.local.set(toSet);
   }
@@ -281,9 +288,12 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Run maintenance check on worker initialization
 pruneChapterCache().catch(() => {});
-chrome.storage?.local?.get('studyResource', (res) => {
+chrome.storage?.local?.get(['studyResource', 'installDate'], (res) => {
   if (res?.studyResource === 'gty') {
     chrome.storage.local.set({ studyResource: 'thesingingbible' });
+  }
+  if (!res?.installDate) {
+    chrome.storage.local.set({ installDate: Date.now() });
   }
 });
 
@@ -726,6 +736,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
       switch (message.type) {
         case 'GET_PASSAGE': {
+          chrome.storage.local.get('verseHoverCount', (data) => {
+            const count = (data?.verseHoverCount || 0) + 1;
+            chrome.storage.local.set({ verseHoverCount: count });
+          });
           const result = await resolvePassage(
             message.parsedRef,
             message.translation,

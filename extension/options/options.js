@@ -23,8 +23,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabPanes = document.querySelectorAll('.tab-pane');
 
   function switchTab(tabId) {
+    if (!tabId) return;
     navItems.forEach(item => {
-      item.classList.toggle('active', item.dataset.tab === tabId);
+      if (item.dataset.tab) {
+        item.classList.toggle('active', item.dataset.tab === tabId);
+      }
     });
     tabPanes.forEach(pane => {
       pane.classList.toggle('active', pane.id === tabId);
@@ -32,10 +35,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   navItems.forEach(item => {
-    item.addEventListener('click', () => {
+    item.addEventListener('click', (e) => {
+      if (!item.dataset.tab) return; // External link
       switchTab(item.dataset.tab);
       window.location.hash = item.dataset.tab.replace('tab-', '');
     });
+  });
+
+  // Feedback & Bug Report Links
+  const FEEDBACK_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform';
+  ['headerFeedbackLink', 'navFeedbackLink', 'sidebarFeedbackLink'].forEach(id => {
+    const el = document.getElementById(id);
+    el?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (chrome.tabs && chrome.tabs.create) {
+        chrome.tabs.create({ url: FEEDBACK_FORM_URL });
+      } else {
+        window.open(FEEDBACK_FORM_URL, '_blank');
+      }
+    });
+  });
+
+  // Dashboard Share Button
+  const dashShareBtn = document.getElementById('dashShareBtn');
+  const dashShareText = document.getElementById('dashShareText');
+  const dashShareNotice = document.getElementById('dashShareNotice');
+  const STORE_SHARE_URL = `https://chromewebstore.google.com/detail/bible-hover/${chrome.runtime?.id || 'makhkcghaglcfnicpkckpbimlmhobcop'}`;
+  const STORE_SHARE_TEXT = 'Check out Bible Hover — instant 0ms scripture previews and study commentaries in your browser. 100% free with no ads!';
+
+  dashShareBtn?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(`${STORE_SHARE_TEXT}\n${STORE_SHARE_URL}`);
+      if (dashShareNotice) {
+        dashShareNotice.style.display = 'block';
+        setTimeout(() => { dashShareNotice.style.display = 'none'; }, 3000);
+      }
+      if (dashShareText) {
+        dashShareText.textContent = '✓ Copied!';
+        setTimeout(() => { dashShareText.textContent = '💌 Share'; }, 2000);
+      }
+      chrome.storage.local.set({ hasRatedOrShared: true, lastPromptDate: Date.now() });
+    } catch {
+      window.open(STORE_SHARE_URL, '_blank');
+    }
   });
 
   // Handle URL Hash on load

@@ -48,14 +48,88 @@
       </div>
     </section>
 
-    <!-- Site Specific Toggle -->
+    <!-- Site Specific Toggle (uBlock Origin style) -->
     <section class="section site-section">
-      <div class="site-row">
-        <div class="site-info">
-          <span class="site-label">Current Site</span>
+      <div class="site-card" id="siteCard">
+        <button type="button" id="sitePowerBtn" class="site-power-btn" title="Click to toggle Bible Hover on this website" aria-label="Toggle Bible Hover on this website">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+
+        <div class="site-details" id="siteDetailsClickArea" title="Click to toggle Bible Hover for this website">
+          <div class="site-label-row">
+            <span class="site-label">Current Website</span>
+          </div>
           <span id="currentDomain" class="site-domain">loading...</span>
+          <div class="site-status-row">
+            <span class="site-status-dot" id="siteStatusDot"></span>
+            <span id="siteStatusText" class="site-status-text">Checking site...</span>
+          </div>
         </div>
-        <button id="siteToggleBtn" class="pill-btn">Enabled</button>
+
+        <div class="site-switch-col">
+          <label class="switch site-toggle-switch" title="Toggle Bible Hover on this website">
+            <input type="checkbox" id="siteToggleSwitch" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Organic Share & Rate Prompt Banner -->
+    <section id="shareBanner" class="share-banner" style="display: none;">
+      <div class="share-banner-card">
+        <button type="button" class="share-close-btn" id="shareBannerDismissBtn" title="Dismiss for now" aria-label="Dismiss">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+
+        <div class="share-banner-header">
+          <span class="share-banner-badge">❤️ 100% FREE &amp; OPEN SOURCE</span>
+          <h3 class="share-banner-title" id="shareBannerTitle">Blessing your Bible study?</h3>
+          <p class="share-banner-desc" id="shareBannerDesc">
+            Help fellow pastors, students, and readers discover Bible Hover by rating it on the Web Store or sharing it!
+          </p>
+        </div>
+
+        <div class="share-banner-actions" id="shareBannerActions">
+          <button type="button" id="shareRateBtn" class="share-action-btn primary" title="Rate 5 stars on the Chrome Web Store">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#fbbf24" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>Rate 5 Stars</span>
+          </button>
+          <button type="button" id="shareFriendsBtn" class="share-action-btn secondary" title="Share with friends or pastors">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share with Friends</span>
+          </button>
+        </div>
+
+        <div id="shareLinksDrawer" class="share-links-drawer" style="display: none;">
+          <div class="share-pills-row">
+            <button type="button" id="shareCopyLinkBtn" class="share-pill" title="Copy recommendation link to clipboard">
+              <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              <span id="shareCopyText">Copy Link</span>
+            </button>
+            <button type="button" id="shareEmailBtn" class="share-pill" title="Email to a friend or pastor">
+              <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <span>Email</span>
+            </button>
+            <button type="button" id="shareWhatsAppBtn" class="share-pill" title="Share via WhatsApp">
+              <span>💬 WhatsApp</span>
+            </button>
+            <button type="button" id="shareXBtn" class="share-pill" title="Post on X">
+              <span>𝕏 Post</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="share-banner-footer" id="shareBannerFooter">
+          <button type="button" id="shareRemindLaterBtn" class="share-remind-link">Remind me in a year</button>
+        </div>
+
+        <div id="shareThanksNotice" class="share-thanks-msg" style="display: none;">
+          Thank you so much! Your recommendation helps spread God's Word freely to pastors and believers worldwide. ❤️
+        </div>
       </div>
     </section>
 
@@ -420,9 +494,22 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <span>Bible Hover v1.0 • 100% Offline Capable</span>
-      <span style="margin: 0 4px; opacity: 0.5;">•</span>
-      <a href="#" id="footerDashboardLink" style="color: var(--accent-color); text-decoration: underline; font-weight: 500;">Dashboard ↗</a>
+      <div class="footer-links">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform" target="_blank" rel="noopener noreferrer" class="footer-link-btn" id="footerFeedbackLink" title="Report a bug, suggest a feature, or give feedback">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          <span>Feedback / Bugs ↗</span>
+        </a>
+        <a href="#" id="footerDashboardLink" class="footer-link-btn" title="Open Settings Dashboard">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+          <span>Dashboard ↗</span>
+        </a>
+      </div>
+      <div class="footer-meta">Bible Hover • 100% Offline Capable</div>
     </footer>
   </div>
 

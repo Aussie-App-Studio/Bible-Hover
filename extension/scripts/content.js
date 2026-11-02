@@ -262,6 +262,7 @@
         font-size: 12px;
         font-weight: 500;
         color: inherit;
+        text-decoration: none;
         opacity: 0.75;
         transition: opacity 0.15s, background-color 0.15s;
       }
@@ -1028,6 +1029,9 @@
           <span class="bh-badge" id="bhDrawerBadge">Study Drawer</span>
         </div>
         <div class="bh-drawer-actions">
+          <a class="bh-btn" id="bhDrawerFeedbackBtn" href="https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform" target="_blank" rel="noopener noreferrer" title="Feedback / Report Issue">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </a>
           <button class="bh-btn" id="bhDrawerCloseBtn" title="Close Drawer (Esc)">
             <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
           </button>

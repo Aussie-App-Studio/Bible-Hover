@@ -16,7 +16,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const resultCopyBtn = document.getElementById('resultCopyBtn');
 
   const currentDomainEl = document.getElementById('currentDomain');
-  const siteToggleBtn = document.getElementById('siteToggleBtn');
+  const siteCard = document.getElementById('siteCard');
+  const sitePowerBtn = document.getElementById('sitePowerBtn');
+  const siteToggleSwitch = document.getElementById('siteToggleSwitch');
+  const siteStatusDot = document.getElementById('siteStatusDot');
+  const siteStatusText = document.getElementById('siteStatusText');
+  const siteDetailsClickArea = document.getElementById('siteDetailsClickArea');
+  let isBrowserSystemPage = false;
 
   const defaultTranslation = document.getElementById('defaultTranslation');
   const studyResource = document.getElementById('studyResource');
@@ -71,13 +77,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (url.protocol.startsWith('http')) {
         currentDomain = url.hostname.toLowerCase();
         currentDomainEl.textContent = currentDomain;
+        currentDomainEl.title = currentDomain;
       } else {
-        currentDomainEl.textContent = 'Browser page (Inactive)';
-        siteToggleBtn.disabled = true;
+        isBrowserSystemPage = true;
+        currentDomainEl.textContent = 'Browser System Page';
       }
     }
   } catch (e) {
-    currentDomainEl.textContent = 'Unknown';
+    currentDomainEl.textContent = 'Unknown Page';
+    isBrowserSystemPage = true;
   }
 
   // 2. Load stored settings
@@ -157,9 +165,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.local.set({ enabled: globalToggle.checked });
   });
 
-  // 4. Site-Specific Toggle
-  siteToggleBtn.addEventListener('click', () => {
-    if (!currentDomain) return;
+  // 4. Site-Specific Toggle (uBlock Origin Style Power Button + Toggle Switch)
+  function toggleCurrentSite() {
+    if (!currentDomain || isBrowserSystemPage) return;
     const idx = disabledDomains.indexOf(currentDomain);
     if (idx >= 0) {
       disabledDomains.splice(idx, 1);
@@ -169,17 +177,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.local.set({ disabledDomains }, () => {
       updateSiteToggleUI();
     });
+  }
+
+  sitePowerBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCurrentSite();
+  });
+
+  siteToggleSwitch?.addEventListener('change', () => {
+    toggleCurrentSite();
+  });
+
+  siteDetailsClickArea?.addEventListener('click', () => {
+    toggleCurrentSite();
   });
 
   function updateSiteToggleUI() {
-    if (!currentDomain || siteToggleBtn.disabled) return;
+    if (!currentDomain || isBrowserSystemPage) {
+      if (sitePowerBtn) {
+        sitePowerBtn.disabled = true;
+        sitePowerBtn.className = 'site-power-btn paused';
+      }
+      if (siteToggleSwitch) {
+        siteToggleSwitch.disabled = true;
+        siteToggleSwitch.checked = false;
+      }
+      if (siteStatusDot) siteStatusDot.className = 'site-status-dot paused';
+      if (siteStatusText) {
+        siteStatusText.textContent = 'Inactive on system pages';
+        siteStatusText.className = 'site-status-text paused';
+      }
+      if (siteCard) siteCard.classList.add('paused');
+      return;
+    }
+
     const isDomainDisabled = disabledDomains.includes(currentDomain);
     if (isDomainDisabled) {
-      siteToggleBtn.textContent = 'Disabled';
-      siteToggleBtn.className = 'pill-btn disabled';
+      if (siteCard) siteCard.classList.add('paused');
+      if (sitePowerBtn) {
+        sitePowerBtn.className = 'site-power-btn paused';
+        sitePowerBtn.title = `Turn on Bible Hover for ${currentDomain}`;
+      }
+      if (siteToggleSwitch) {
+        siteToggleSwitch.checked = false;
+        siteToggleSwitch.title = `Turn on Bible Hover for ${currentDomain}`;
+      }
+      if (siteStatusDot) siteStatusDot.className = 'site-status-dot paused';
+      if (siteStatusText) {
+        siteStatusText.textContent = 'Paused on this website';
+        siteStatusText.className = 'site-status-text paused';
+      }
     } else {
-      siteToggleBtn.textContent = 'Enabled';
-      siteToggleBtn.className = 'pill-btn active';
+      if (siteCard) siteCard.classList.remove('paused');
+      if (sitePowerBtn) {
+        sitePowerBtn.className = 'site-power-btn active';
+        sitePowerBtn.title = `Turn off Bible Hover for ${currentDomain}`;
+      }
+      if (siteToggleSwitch) {
+        siteToggleSwitch.checked = true;
+        siteToggleSwitch.title = `Turn off Bible Hover for ${currentDomain}`;
+      }
+      if (siteStatusDot) siteStatusDot.className = 'site-status-dot active';
+      if (siteStatusText) {
+        siteStatusText.textContent = 'Active on this website';
+        siteStatusText.className = 'site-status-text active';
+      }
     }
   }
 
@@ -529,7 +591,153 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const openDashboardBtn = document.getElementById('openDashboardBtn');
   const footerDashboardLink = document.getElementById('footerDashboardLink');
+  const footerFeedbackLink = document.getElementById('footerFeedbackLink');
   openDashboardBtn?.addEventListener('click', openFullDashboard);
   footerDashboardLink?.addEventListener('click', openFullDashboard);
+  footerFeedbackLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const url = 'https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform';
+    if (chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url });
+    } else {
+      window.open(url, '_blank');
+    }
+  });
+
+  // --- Organic Share & Rate Prompt System ---
+  const STORE_BASE_URL = `https://chromewebstore.google.com/detail/bible-hover/${chrome.runtime?.id || 'makhkcghaglcfnicpkckpbimlmhobcop'}`;
+  const STORE_REVIEWS_URL = `${STORE_BASE_URL}/reviews`;
+  const SHARE_TEXT = `Check out Bible Hover — instant 0ms scripture previews and study commentaries in your browser. 100% free with no ads!`;
+
+  const shareBanner = document.getElementById('shareBanner');
+  const shareRateBtn = document.getElementById('shareRateBtn');
+  const shareFriendsBtn = document.getElementById('shareFriendsBtn');
+  const shareLinksDrawer = document.getElementById('shareLinksDrawer');
+  const shareBannerDismissBtn = document.getElementById('shareBannerDismissBtn');
+  const shareRemindLaterBtn = document.getElementById('shareRemindLaterBtn');
+  const shareThanksNotice = document.getElementById('shareThanksNotice');
+  const shareCopyLinkBtn = document.getElementById('shareCopyLinkBtn');
+  const shareCopyText = document.getElementById('shareCopyText');
+  const shareEmailBtn = document.getElementById('shareEmailBtn');
+  const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+  const shareXBtn = document.getElementById('shareXBtn');
+
+  async function checkAndRenderSharePrompt() {
+    const data = await chrome.storage.local.get([
+      'installDate',
+      'lastPromptDate',
+      'hasRatedOrShared',
+      'verseHoverCount'
+    ]);
+
+    const now = Date.now();
+    let installDate = data.installDate;
+    if (!installDate) {
+      installDate = now;
+      chrome.storage.local.set({ installDate: now });
+    }
+
+    const daysSinceInstall = (now - installDate) / (1000 * 60 * 60 * 24);
+    const lastPrompt = data.lastPromptDate;
+    const daysSinceLastPrompt = lastPrompt ? (now - lastPrompt) / (1000 * 60 * 60 * 24) : 9999;
+    const hovers = data.verseHoverCount || 0;
+
+    let shouldShow = false;
+
+    if (!lastPrompt) {
+      // First prompt window (sometime in first two weeks, once user tested it)
+      // Shown if installed >= 3 days OR if user has hovered over >= 5 verses
+      if (daysSinceInstall >= 3 || hovers >= 5) {
+        shouldShow = true;
+      }
+    } else {
+      // Annual recurring prompt: at least 365 days after the previous prompt
+      if (daysSinceLastPrompt >= 365) {
+        shouldShow = true;
+      }
+    }
+
+    if (shouldShow && shareBanner) {
+      shareBanner.style.display = 'block';
+    }
+  }
+
+  function dismissPrompt() {
+    if (!shareBanner) return;
+    shareBanner.style.display = 'none';
+    chrome.storage.local.set({
+      lastPromptDate: Date.now()
+    });
+  }
+
+  function handlePromptCompleted() {
+    chrome.storage.local.set({
+      hasRatedOrShared: true,
+      lastPromptDate: Date.now()
+    });
+    const actions = document.getElementById('shareBannerActions');
+    const footer = document.getElementById('shareBannerFooter');
+    if (actions) actions.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+    if (shareLinksDrawer) shareLinksDrawer.style.display = 'none';
+    if (shareThanksNotice) shareThanksNotice.style.display = 'block';
+    setTimeout(() => {
+      if (shareBanner) shareBanner.style.display = 'none';
+    }, 3500);
+  }
+
+  shareRateBtn?.addEventListener('click', () => {
+    if (chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: STORE_REVIEWS_URL });
+    } else {
+      window.open(STORE_REVIEWS_URL, '_blank');
+    }
+    handlePromptCompleted();
+  });
+
+  shareFriendsBtn?.addEventListener('click', () => {
+    if (shareLinksDrawer) {
+      shareLinksDrawer.style.display = shareLinksDrawer.style.display === 'none' ? 'block' : 'none';
+    }
+  });
+
+  shareCopyLinkBtn?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(`${SHARE_TEXT}\n${STORE_BASE_URL}`);
+      if (shareCopyText) shareCopyText.textContent = 'Copied!';
+      setTimeout(() => {
+        if (shareCopyText) shareCopyText.textContent = 'Copy Link';
+        handlePromptCompleted();
+      }, 1000);
+    } catch {
+      handlePromptCompleted();
+    }
+  });
+
+  shareEmailBtn?.addEventListener('click', () => {
+    const subject = encodeURIComponent('Helpful free Bible study tool: Bible Hover');
+    const body = encodeURIComponent(`Hi!\n\nI've been using this free Chrome extension called Bible Hover. Whenever you hover over any Bible verse reference online, it instantly shows the scripture passage and study commentaries with zero delay.\n\nIt's completely free with no ads or tracking:\n${STORE_BASE_URL}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    handlePromptCompleted();
+  });
+
+  shareWhatsAppBtn?.addEventListener('click', () => {
+    const text = encodeURIComponent(`Check out Bible Hover — free instant scripture & commentary previews in your browser:\n${STORE_BASE_URL}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    handlePromptCompleted();
+  });
+
+  shareXBtn?.addEventListener('click', () => {
+    const text = encodeURIComponent('Check out Bible Hover — instant 0ms scripture previews and study commentaries in your browser. Free & open source:');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(STORE_BASE_URL)}`, '_blank');
+    handlePromptCompleted();
+  });
+
+  shareBannerDismissBtn?.addEventListener('click', dismissPrompt);
+  shareRemindLaterBtn?.addEventListener('click', dismissPrompt);
+
+  // Check and display organic share prompt
+  checkAndRenderSharePrompt();
+  window.checkAndRenderSharePrompt = checkAndRenderSharePrompt;
 
 });

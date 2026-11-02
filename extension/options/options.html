@@ -18,6 +18,12 @@
         </div>
       </div>
       <div class="dash-header-controls">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform" target="_blank" rel="noopener noreferrer" class="dash-feedback-btn" id="headerFeedbackLink" title="Submit feedback, report a bug, or request a feature">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          <span>Feedback / Report Bug ↗</span>
+        </a>
         <div id="saveToast" class="save-toast" style="opacity: 0;">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M5 13l4 4L19 7"/></svg>
           <span>Saved</span>
@@ -61,14 +67,49 @@
             <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <span>Scripture Sandbox</span>
           </button>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform" target="_blank" rel="noopener noreferrer" class="nav-item nav-item-external" id="navFeedbackLink" title="Send feedback, report a bug, or request a feature">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span>Feedback & Issues ↗</span>
+          </a>
         </nav>
+
+        <div class="sidebar-feedback-box">
+          <div class="sidebar-share-card">
+            <div class="ssc-top">
+              <span class="ssc-badge">❤️ FREE &amp; OPEN SOURCE</span>
+              <span class="ssc-title">Help Pastors &amp; Friends</span>
+            </div>
+            <p class="ssc-desc">Blessing your study? Help others discover Bible Hover.</p>
+            <div class="ssc-actions">
+              <a href="https://chromewebstore.google.com/detail/bible-hover/makhkcghaglcfnicpkckpbimlmhobcop/reviews" target="_blank" rel="noopener noreferrer" class="ssc-btn primary" title="Rate 5 stars on Web Store">
+                ⭐ Rate 5 Stars
+              </a>
+              <button type="button" id="dashShareBtn" class="ssc-btn secondary" title="Copy recommendation link">
+                <span id="dashShareText">💌 Share</span>
+              </button>
+            </div>
+            <span id="dashShareNotice" class="ssc-copied-notice" style="display: none;">Link copied to clipboard!</span>
+          </div>
+
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform" target="_blank" rel="noopener noreferrer" class="sidebar-feedback-card" id="sidebarFeedbackLink" title="Submit thoughts, bug reports, and suggestions">
+            <div class="sfc-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              </svg>
+            </div>
+            <div class="sfc-content">
+              <span class="sfc-title">Feedback & Bugs</span>
+              <span class="sfc-sub">Help improve Bible Hover ↗</span>
+            </div>
+          </a>
+        </div>
 
         <div class="sidebar-footer">
           <div class="sidebar-stat">
             <span class="stat-dot green"></span>
             <span>100% Offline Capable</span>
           </div>
-          <span class="version-text">v1.0.1</span>
+          <span class="version-text">v1.0.3</span>
         </div>
       </aside>
 
