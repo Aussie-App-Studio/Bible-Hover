@@ -17,6 +17,7 @@
   let config = {
     enabled: true,
     defaultTranslation: 'BSB',
+    detectInlineTranslations: true,
     studyResource: 'biblehub', // 'biblehub' | 'thesingingbible' | 'bible_com' | 'youversion' | 'desiringgod' | 'youtube'
     showTranslationBar: true,
     minimalistMode: false,
@@ -29,8 +30,8 @@
     hoverDelay: 120,
     disabledDomains: [],
     commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
-    preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'tgc'
-    multiPillResources: ['commentary', 'tgc', 'thesingingbible', 'youtube']
+    preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
+    multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube']
   };
 
   // State
@@ -812,6 +813,162 @@
         flex: 1;
         scrollbar-width: thin;
       }
+
+      /* Drawer Navigation Tabs */
+      .bh-drawer-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        overflow-x: auto;
+        scrollbar-width: thin;
+        flex-shrink: 0;
+      }
+      .bh-drawer.theme-dark .bh-drawer-nav {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+      }
+      .bh-drawer.theme-sepia .bh-drawer-nav {
+        border-bottom-color: rgba(67, 52, 34, 0.08);
+      }
+      .bh-drawer-tab {
+        background: none;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 14px;
+        padding: 4px 10px;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        color: inherit;
+        opacity: 0.78;
+        transition: all 0.15s ease;
+      }
+      .bh-drawer-tab:hover {
+        opacity: 1;
+        border-color: #3b82f6;
+        color: #2563eb;
+      }
+      .bh-drawer-tab.active {
+        opacity: 1;
+        background: #3b82f6;
+        color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
+      }
+      .bh-drawer.theme-dark .bh-drawer-tab {
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+      .bh-drawer.theme-dark .bh-drawer-tab.active {
+        background: #3b82f6;
+        color: #ffffff;
+      }
+      .bh-drawer.theme-sepia .bh-drawer-tab.active {
+        background: #92400e;
+        border-color: #92400e;
+        color: #ffffff;
+      }
+
+      /* Drawer Commentary Cards */
+      .bh-drawer-source-card {
+        padding: 18px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .bh-drawer.theme-dark .bh-drawer-source-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      .bh-drawer.theme-sepia .bh-drawer-source-card {
+        background: rgba(67, 52, 34, 0.03);
+        border-color: rgba(67, 52, 34, 0.08);
+      }
+      .bh-source-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .bh-source-badge {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #3b82f6;
+      }
+      .bh-drawer.theme-dark .bh-source-badge { color: #60a5fa; }
+      .bh-drawer.theme-sepia .bh-source-badge { color: #b45309; }
+      .bh-source-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.35;
+      }
+      .bh-source-desc {
+        font-size: 13.5px;
+        line-height: 1.6;
+        margin: 0;
+        opacity: 0.88;
+      }
+      .bh-source-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.03);
+        font-size: 12.5px;
+      }
+      .bh-drawer.theme-dark .bh-source-meta {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .bh-drawer.theme-sepia .bh-source-meta {
+        background: rgba(67, 52, 34, 0.04);
+      }
+      .bh-source-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .bh-source-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .bh-source-btn.primary {
+        background: #3b82f6;
+        color: #ffffff;
+        border: 1px solid #3b82f6;
+      }
+      .bh-source-btn.primary:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+      }
+      .bh-source-btn.secondary {
+        background: transparent;
+        color: inherit;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+      }
+      .bh-drawer.theme-dark .bh-source-btn.secondary {
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      .bh-source-btn.secondary:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .bh-drawer.theme-dark .bh-source-btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
       }
     `;
 
@@ -868,17 +1025,22 @@
       <div class="bh-drawer-header">
         <div class="bh-drawer-title-group">
           <span class="bh-drawer-title" id="bhDrawerTitle">Scripture Study Notes</span>
-          <span class="bh-badge" id="bhDrawerBadge">Commentary</span>
+          <span class="bh-badge" id="bhDrawerBadge">Study Drawer</span>
         </div>
         <div class="bh-drawer-actions">
-          <a class="bh-link-btn" id="bhDrawerBibleHubLink" target="_blank" rel="noopener noreferrer">💬 BibleHub ↗</a>
-          <a class="bh-link-btn" id="bhDrawerTgcLink" target="_blank" rel="noopener noreferrer">🏛 TGC ↗</a>
           <button class="bh-btn" id="bhDrawerCloseBtn" title="Close Drawer (Esc)">
             <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
       <div class="bh-drawer-scripture" id="bhDrawerScripture"></div>
+      <div class="bh-drawer-nav" id="bhDrawerNav">
+        <button class="bh-drawer-tab active" data-tab="classical">💬 Classical (BibleHub)</button>
+        <button class="bh-drawer-tab" data-tab="guzik">✝️ Guzik (Enduring Word)</button>
+        <button class="bh-drawer-tab" data-tab="tgc">🏛 TGC</button>
+        <button class="bh-drawer-tab" data-tab="constable">📚 Constable (DTS)</button>
+        <button class="bh-drawer-tab" data-tab="utley">🌐 Utley (FBC)</button>
+      </div>
       <div class="bh-comm-bar" id="bhDrawerCommBar" style="display:flex;"></div>
       <div class="bh-drawer-body" id="bhDrawerBody"></div>
     `;
@@ -888,6 +1050,7 @@
 
     setupHorizontalScrollable(shadowRoot.getElementById('bhTransBar'));
     setupHorizontalScrollable(shadowRoot.getElementById('bhCommBar'));
+    setupHorizontalScrollable(shadowRoot.getElementById('bhDrawerNav'));
     setupHorizontalScrollable(shadowRoot.getElementById('bhDrawerCommBar'));
 
     // Event listeners on tooltip
@@ -1209,6 +1372,7 @@
     const mode = config.commentaryMode || 'direct_link';
     const commLink = getCommentaryLink(res, config.preferredCommentary || 'biblehub_all');
     const studyLink = generateStudyResourceLink(res, config.studyResource || 'biblehub');
+    const isPassageWholeChapter = !!(res.segments && res.segments.length === 1 && res.segments[0].isWholeChapter);
 
     if (mode === 'direct_link') {
       // Option 1: Direct Link to Commentary + Study Link
@@ -1216,12 +1380,14 @@
         footerLeft.textContent = res.translationName || res.translation;
       }
 
-      const chapterToggle = document.createElement('span');
-      chapterToggle.className = 'bh-link-btn';
-      chapterToggle.id = 'bhChapterToggle';
-      chapterToggle.textContent = showingFullChapter ? 'Verses Only' : 'Full Chapter';
-      chapterToggle.addEventListener('click', handleToggleFullChapter);
-      footerRight.appendChild(chapterToggle);
+      if (!isPassageWholeChapter) {
+        const chapterToggle = document.createElement('span');
+        chapterToggle.className = 'bh-link-btn';
+        chapterToggle.id = 'bhChapterToggle';
+        chapterToggle.textContent = showingFullChapter ? 'Verses Only' : 'Full Chapter';
+        chapterToggle.addEventListener('click', handleToggleFullChapter);
+        footerRight.appendChild(chapterToggle);
+      }
 
       const cA = document.createElement('a');
       cA.className = 'bh-link-btn';
@@ -1276,12 +1442,14 @@
         });
         footerRight.appendChild(backBtn);
       } else {
-        const chapterToggle = document.createElement('span');
-        chapterToggle.className = 'bh-link-btn';
-        chapterToggle.id = 'bhChapterToggle';
-        chapterToggle.textContent = showingFullChapter ? 'Verses Only' : 'Full Chapter';
-        chapterToggle.addEventListener('click', handleToggleFullChapter);
-        footerRight.appendChild(chapterToggle);
+        if (!isPassageWholeChapter) {
+          const chapterToggle = document.createElement('span');
+          chapterToggle.className = 'bh-link-btn';
+          chapterToggle.id = 'bhChapterToggle';
+          chapterToggle.textContent = showingFullChapter ? 'Verses Only' : 'Full Chapter';
+          chapterToggle.addEventListener('click', handleToggleFullChapter);
+          footerRight.appendChild(chapterToggle);
+        }
 
         const sA = document.createElement('a');
         sA.className = 'bh-link-btn';
@@ -1299,12 +1467,14 @@
         footerLeft.textContent = res.translationName || res.translation;
       }
 
-      const chapterToggle = document.createElement('span');
-      chapterToggle.className = 'bh-link-btn';
-      chapterToggle.id = 'bhChapterToggle';
-      chapterToggle.textContent = showingFullChapter ? 'Verses Only' : 'Full Chapter';
-      chapterToggle.addEventListener('click', handleToggleFullChapter);
-      footerRight.appendChild(chapterToggle);
+      if (!isPassageWholeChapter) {
+        const chapterToggle = document.createElement('span');
+        chapterToggle.className = 'bh-link-btn';
+        chapterToggle.id = 'bhChapterToggle';
+        chapterToggle.textContent = showingFullChapter ? 'Verses Only' : 'Full Chapter';
+        chapterToggle.addEventListener('click', handleToggleFullChapter);
+        footerRight.appendChild(chapterToggle);
+      }
 
       const drawerBtn = document.createElement('span');
       drawerBtn.className = 'bh-link-btn';
@@ -1335,12 +1505,14 @@
         footerLeft.textContent = pillKeys.length >= 4 ? '' : (res.translation || '');
       }
 
-      const chapterToggle = document.createElement('span');
-      chapterToggle.className = 'bh-link-btn';
-      chapterToggle.id = 'bhChapterToggle';
-      chapterToggle.textContent = showingFullChapter ? 'Verses' : 'Full Ch.';
-      chapterToggle.addEventListener('click', handleToggleFullChapter);
-      footerRight.appendChild(chapterToggle);
+      if (!isPassageWholeChapter) {
+        const chapterToggle = document.createElement('span');
+        chapterToggle.className = 'bh-link-btn';
+        chapterToggle.id = 'bhChapterToggle';
+        chapterToggle.textContent = showingFullChapter ? 'Verses' : 'Full Ch.';
+        chapterToggle.addEventListener('click', handleToggleFullChapter);
+        footerRight.appendChild(chapterToggle);
+      }
 
       for (const pKey of pillKeys) {
         const info = getResourcePillInfo(res, pKey);
@@ -1404,6 +1576,33 @@
           label: '🏛 TGC Commentary',
           url: `https://www.thegospelcoalition.org/commentary/${tgcSlug}/`
         };
+      case 'guzik': {
+        let bName = (passageRes.bookName || '').toLowerCase().trim();
+        if (bName === 'psalms') bName = 'psalm';
+        if (bName.includes('song of')) bName = 'song-of-solomon';
+        const slug = bName.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return {
+          label: '✝️ Guzik (Enduring Word)',
+          shortLabel: '✝️ Guzik',
+          url: `https://enduringword.com/bible-commentary/${slug}-${firstCh}/`
+        };
+      }
+      case 'constable': {
+        const bName = encodeURIComponent(passageRes.bookName || 'Genesis');
+        return {
+          label: "📚 Constable's Notes (NetBible)",
+          shortLabel: '📚 Constable',
+          url: `https://netbible.org/bible/${bName}+${firstCh}`
+        };
+      }
+      case 'utley': {
+        const bName = passageRes.bookName || '';
+        return {
+          label: '🌐 Utley (Free Bible)',
+          shortLabel: '🌐 Utley',
+          url: `https://www.google.com/search?q=site:freebiblecommentary.org+${encodeURIComponent(bName + ' ' + firstCh)}`
+        };
+      }
       case 'biblehub_all':
       default:
         return {
@@ -1437,6 +1636,30 @@
           label: '🏛 TGC',
           url: `https://www.thegospelcoalition.org/commentary/${tgcSlug}/`
         };
+      case 'guzik': {
+        let bName = (passageRes.bookName || '').toLowerCase().trim();
+        if (bName === 'psalms') bName = 'psalm';
+        if (bName.includes('song of')) bName = 'song-of-solomon';
+        const slug = bName.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return {
+          label: '✝️ Guzik',
+          url: `https://enduringword.com/bible-commentary/${slug}-${firstCh}/`
+        };
+      }
+      case 'constable': {
+        const bName = encodeURIComponent(passageRes.bookName || 'Genesis');
+        return {
+          label: '📚 Constable',
+          url: `https://netbible.org/bible/${bName}+${firstCh}`
+        };
+      }
+      case 'utley': {
+        const bName = passageRes.bookName || '';
+        return {
+          label: '🌐 Utley',
+          url: `https://www.google.com/search?q=site:freebiblecommentary.org+${encodeURIComponent(bName + ' ' + firstCh)}`
+        };
+      }
       case 'thesingingbible': {
         const bookSlug = (passageRes.bookName || '')
           .toLowerCase()
@@ -1577,7 +1800,10 @@
     }
   }
 
-  // Open side study drawer (Option 3)
+  // Open side study drawer (Option 3 & Approach 2 Multi-Source Tabs)
+  let activeDrawerTab = 'classical';
+  let cachedDrawerCommentaries = null;
+
   function openStudyDrawer(passageRes) {
     if (!drawerEl || !passageRes) return;
     hideTooltip(true); // Close floating tooltip so screen is clean!
@@ -1589,42 +1815,177 @@
 
     drawerEl.querySelector('#bhDrawerTitle').textContent = `${passageRes.canonicalLabel} • Study Notes`;
 
-    const commLink = getCommentaryLink(passageRes, 'biblehub_all');
-    const tgcLink = getCommentaryLink(passageRes, 'tgc');
-    drawerEl.querySelector('#bhDrawerBibleHubLink').href = commLink.url;
-    drawerEl.querySelector('#bhDrawerTgcLink').href = tgcLink.url;
-
     // Scripture passage preview
     const scrEl = drawerEl.querySelector('#bhDrawerScripture');
     const versesHtml = passageRes.segments.flatMap(s => s.verses.map(v => `<b>${v.verse}</b> ${escapeHtml(v.text)}`)).join(' ');
     scrEl.innerHTML = `<strong>${passageRes.canonicalLabel} (${passageRes.translation}):</strong><br>${versesHtml}`;
 
-    // Body loading
     const bodyEl = drawerEl.querySelector('#bhDrawerBody');
     const commBarEl = drawerEl.querySelector('#bhDrawerCommBar');
-    bodyEl.innerHTML = `
-      <div class="bh-loading">
-        <div class="bh-spinner"></div>
-        <span>Loading Commentary Notes...</span>
-      </div>
-    `;
+    const navEl = drawerEl.querySelector('#bhDrawerNav');
 
+    const firstCh = passageRes.primaryChapter || 1;
     const firstV = passageRes.segments?.[0]?.verseStart || 1;
-    chrome.runtime.sendMessage({
-      type: 'GET_COMMENTARY',
-      bookId: passageRes.bookId,
-      chapter: passageRes.primaryChapter,
-      verseStart: firstV
-    }, (cRes) => {
-      if (!cRes || !cRes.ok || !Array.isArray(cRes.commentaries) || cRes.commentaries.length === 0) {
-        bodyEl.innerHTML = `<div class="bh-error">No commentary notes found. <a href="${commLink.url}" target="_blank" style="color:#3b82f6;">Search BibleHub ↗</a></div>`;
-        return;
-      }
-      buildCommentatorChips(cRes.commentaries, commBarEl, (authorKey) => {
-        renderCommentaryItems(cRes.commentaries, authorKey, bodyEl);
+
+    // Direct resource links
+    const commLink = getCommentaryLink(passageRes, 'biblehub_all');
+    const guzikLink = getCommentaryLink(passageRes, 'guzik');
+    const tgcLink = getCommentaryLink(passageRes, 'tgc');
+    const constableLink = getCommentaryLink(passageRes, 'constable');
+    const utleyLink = getCommentaryLink(passageRes, 'utley');
+
+    cachedDrawerCommentaries = null;
+
+    function renderActiveTab(tabKey) {
+      activeDrawerTab = tabKey;
+
+      // Update active state in nav buttons
+      navEl.querySelectorAll('.bh-drawer-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabKey);
       });
-      renderCommentaryItems(cRes.commentaries, 'all', bodyEl);
+
+      if (tabKey === 'classical') {
+        commBarEl.style.display = 'flex';
+        if (cachedDrawerCommentaries) {
+          buildCommentatorChips(cachedDrawerCommentaries, commBarEl, (authorKey) => {
+            renderCommentaryItems(cachedDrawerCommentaries, authorKey, bodyEl);
+          });
+          renderCommentaryItems(cachedDrawerCommentaries, 'all', bodyEl);
+        } else {
+          bodyEl.innerHTML = `
+            <div class="bh-loading">
+              <div class="bh-spinner"></div>
+              <span>Loading Classical Commentary Notes...</span>
+            </div>
+          `;
+          chrome.runtime.sendMessage({
+            type: 'GET_COMMENTARY',
+            bookId: passageRes.bookId,
+            chapter: firstCh,
+            verseStart: firstV
+          }, (cRes) => {
+            if (activeDrawerTab !== 'classical') return;
+            if (!cRes || !cRes.ok || !Array.isArray(cRes.commentaries) || cRes.commentaries.length === 0) {
+              bodyEl.innerHTML = `<div class="bh-error">No quick commentary notes found for this verse. <a href="${commLink.url}" target="_blank" style="color:#3b82f6;">Search all notes on BibleHub ↗</a></div>`;
+              return;
+            }
+            cachedDrawerCommentaries = cRes.commentaries;
+            buildCommentatorChips(cachedDrawerCommentaries, commBarEl, (authorKey) => {
+              renderCommentaryItems(cachedDrawerCommentaries, authorKey, bodyEl);
+            });
+            renderCommentaryItems(cachedDrawerCommentaries, 'all', bodyEl);
+          });
+        }
+      } else if (tabKey === 'guzik') {
+        commBarEl.style.display = 'none';
+        bodyEl.innerHTML = `
+          <div class="bh-drawer-source-card">
+            <div class="bh-source-header">
+              <span class="bh-source-badge">Pastor David Guzik • Enduring Word</span>
+              <h3 class="bh-source-title">Enduring Word Bible Commentary</h3>
+            </div>
+            <p class="bh-source-desc">
+              David Guzik's verse-by-verse commentary covers the entire Bible with clear, accessible, Christ-centered pastoral exposition. Used by millions of pastors, missionaries, and teachers worldwide, completely free without paywalls.
+            </p>
+            <div class="bh-source-meta">
+              <span class="bh-meta-item">📖 Target Passage: <strong>${passageRes.canonicalLabel}</strong></span>
+              <span class="bh-meta-item">🏷 Expository Unit: <strong>${passageRes.bookName} Chapter ${firstCh}</strong></span>
+            </div>
+            <div class="bh-source-actions">
+              <a class="bh-source-btn primary" href="${guzikLink.url}" target="_blank" rel="noopener noreferrer">
+                Open ${passageRes.canonicalLabel} on Enduring Word ↗
+              </a>
+              <a class="bh-source-btn secondary" href="https://enduringword.com/" target="_blank" rel="noopener noreferrer">
+                EnduringWord.com Home ↗
+              </a>
+            </div>
+          </div>
+        `;
+      } else if (tabKey === 'tgc') {
+        commBarEl.style.display = 'none';
+        bodyEl.innerHTML = `
+          <div class="bh-drawer-source-card">
+            <div class="bh-source-header">
+              <span class="bh-source-badge">The Gospel Coalition • TGCBC</span>
+              <h3 class="bh-source-title">The Gospel Coalition Bible Commentary</h3>
+            </div>
+            <p class="bh-source-desc">
+              Written by contemporary evangelical scholars and pastors (edited by D.A. Carson), the TGC Bible Commentary provides accessible, robust theological analysis, historical context, and pastoral application for each biblical book.
+            </p>
+            <div class="bh-source-meta">
+              <span class="bh-meta-item">📖 Target Passage: <strong>${passageRes.canonicalLabel}</strong></span>
+              <span class="bh-meta-item">🏛 Scholarly Volume: <strong>${passageRes.bookName} Exposition</strong></span>
+            </div>
+            <div class="bh-source-actions">
+              <a class="bh-source-btn primary" href="${tgcLink.url}" target="_blank" rel="noopener noreferrer">
+                Open ${passageRes.bookName} on The Gospel Coalition ↗
+              </a>
+            </div>
+          </div>
+        `;
+      } else if (tabKey === 'constable') {
+        commBarEl.style.display = 'none';
+        bodyEl.innerHTML = `
+          <div class="bh-drawer-source-card">
+            <div class="bh-source-header">
+              <span class="bh-source-badge">Dr. Thomas L. Constable • Dallas Theological Seminary</span>
+              <h3 class="bh-source-title">Constable's Expository Notes</h3>
+            </div>
+            <p class="bh-source-desc">
+              Having taught at DTS for 45 years, Dr. Constable wrote massive, verse-by-verse exegetical commentaries on all 66 books of the Bible (totaling over 10,000 pages). Released 100% free online without publisher paywalls via Sonic Light and NET Bible.
+            </p>
+            <div class="bh-source-meta">
+              <span class="bh-meta-item">📖 Target Passage: <strong>${passageRes.canonicalLabel}</strong></span>
+              <span class="bh-meta-item">📚 Study Panels: <strong>Integrated in NET Bible & Sonic Light</strong></span>
+            </div>
+            <div class="bh-source-actions">
+              <a class="bh-source-btn primary" href="${constableLink.url}" target="_blank" rel="noopener noreferrer">
+                Read with Constable Notes on NetBible ↗
+              </a>
+              <a class="bh-source-btn secondary" href="https://soniclight.com/constable-notes-pdf/" target="_blank" rel="noopener noreferrer">
+                Sonic Light Notes & PDFs ↗
+              </a>
+            </div>
+          </div>
+        `;
+      } else if (tabKey === 'utley') {
+        commBarEl.style.display = 'none';
+        bodyEl.innerHTML = `
+          <div class="bh-drawer-source-card">
+            <div class="bh-source-header">
+              <span class="bh-source-badge">Dr. Bob Utley • Free Bible Commentary</span>
+              <h3 class="bh-source-title">Free Bible Commentary Study Guides</h3>
+            </div>
+            <p class="bh-source-desc">
+              Retired Baptist seminary professor of hermeneutics Dr. Bob Utley put his entire 32-volume verse-by-verse exegetical commentary series online for missionaries and global pastors. Emphasizes original language word studies, textual issues, and historical context. Translated into over 40 languages.
+            </p>
+            <div class="bh-source-meta">
+              <span class="bh-meta-item">📖 Target Passage: <strong>${passageRes.canonicalLabel}</strong></span>
+              <span class="bh-meta-item">🌐 Global Access: <strong>Translated into 40+ Languages</strong></span>
+            </div>
+            <div class="bh-source-actions">
+              <a class="bh-source-btn primary" href="${utleyLink.url}" target="_blank" rel="noopener noreferrer">
+                Search ${passageRes.canonicalLabel} on FreeBibleCommentary ↗
+              </a>
+              <a class="bh-source-btn secondary" href="https://www.freebiblecommentary.org/" target="_blank" rel="noopener noreferrer">
+                FreeBibleCommentary.org (40+ Languages) ↗
+              </a>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Connect tab click events
+    navEl.querySelectorAll('.bh-drawer-tab').forEach(btn => {
+      btn.onclick = () => renderActiveTab(btn.dataset.tab);
     });
+
+    // Default to user's preferred commentary tab if applicable, otherwise classical
+    const preferredTab = ['guzik', 'tgc', 'constable', 'utley'].includes(config.preferredCommentary)
+      ? config.preferredCommentary
+      : 'classical';
+    renderActiveTab(preferredTab);
   }
 
   // Close side study drawer
@@ -1763,8 +2124,11 @@
     tabScripture?.classList.add('active');
     tabCommentary?.classList.remove('active');
 
-    // Use tag's explicit translation if present, otherwise default setting
-    currentActiveTranslation = parsedRef.translation || config.defaultTranslation || 'BSB';
+    // Use cited translation if present and auto-detection is enabled; otherwise user's default
+    const allowInline = config.detectInlineTranslations !== false;
+    currentActiveTranslation = (allowInline && parsedRef.translation)
+      ? parsedRef.translation
+      : (config.defaultTranslation || 'BSB');
 
     // Apply active theme & font size classes
     const theme = resolveTheme();

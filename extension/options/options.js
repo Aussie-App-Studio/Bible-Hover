@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       'hoverDelay',
       'minimalistMode',
       'defaultTranslation',
+      'detectInlineTranslations',
       'showTranslationBar',
       'enabledTranslations',
       'commentaryMode',
@@ -78,6 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     hoverDelay: typeof stored.hoverDelay === 'number' ? stored.hoverDelay : 120,
     minimalistMode: Boolean(stored.minimalistMode),
     defaultTranslation: stored.defaultTranslation || 'BSB',
+    detectInlineTranslations: stored.detectInlineTranslations !== false,
     showTranslationBar: stored.showTranslationBar !== false,
     enabledTranslations: Array.isArray(stored.enabledTranslations) && stored.enabledTranslations.length > 0
       ? stored.enabledTranslations
@@ -87,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     studyResource: stored.studyResource || 'biblehub',
     multiPillResources: Array.isArray(stored.multiPillResources)
       ? stored.multiPillResources
-      : ['commentary', 'tgc', 'thesingingbible', 'youtube'],
+      : ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube'],
     disabledDomains: Array.isArray(stored.disabledDomains) ? stored.disabledDomains : []
   };
 
@@ -221,6 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 5. Tab 2: Translations & Languages Manager
   const defaultTranslation = document.getElementById('defaultTranslation');
   const showTranslationBar = document.getElementById('showTranslationBar');
+  const detectInlineTranslations = document.getElementById('detectInlineTranslations');
   const coreTransGrid = document.getElementById('coreTransGrid');
   const intlTransGrid = document.getElementById('intlTransGrid');
   const btnSelectAllTrans = document.getElementById('btnSelectAllTrans');
@@ -228,12 +231,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (defaultTranslation) defaultTranslation.value = config.defaultTranslation;
   if (showTranslationBar) showTranslationBar.checked = config.showTranslationBar;
+  if (detectInlineTranslations) detectInlineTranslations.checked = config.detectInlineTranslations;
 
   defaultTranslation?.addEventListener('change', () => {
     saveConfig({ defaultTranslation: defaultTranslation.value });
   });
   showTranslationBar?.addEventListener('change', () => {
     saveConfig({ showTranslationBar: showTranslationBar.checked });
+  });
+  detectInlineTranslations?.addEventListener('change', () => {
+    saveConfig({ detectInlineTranslations: detectInlineTranslations.checked });
   });
 
   const coreList = ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'];

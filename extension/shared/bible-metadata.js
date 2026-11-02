@@ -760,21 +760,42 @@
 
   const translationKeys = Object.keys(TRANSLATION_ALIASES).join('|');
 
+  const DASH_CHAR = '[-–—−‐‑‒―~〜﹣－]';
+  const DASH_PART = `(?:${DASH_CHAR}|\\s+(?:to|through)\\s+)`;
+  const COLON_PART = `(?:[:.：··\\uFE55]\\s*(?:vv?\\.?|verses?)?|\\s*\\b(?:vv?\\.?|verses?)\\s*|\\s*,\\s*(?=\\d))`;
+
   // Master regex to detect primary Scripture references in text
   // Groups:
   // 1: Book name/abbreviation (with optional trailing period)
   // 2: Chapter + Verse/Range specification (e.g. "3:16-18", "1:26-2:3", "23")
-  // 3: Optional trailing translation tag, e.g. "(ESV)" or "NIV" or "[KJV]"
+  // 3: Optional trailing translation tag, e.g. "(ESV)" or "NIV" or "[KJV]" or ", NIV"
   const MASTER_REF_REGEX = new RegExp(
-    `(?<![\\p{L}\\p{N}_])((?:${escapedAliases.join('|')})\\.?)(?:\\s+)(\\d{1,3}(?:\\s*[:.]\\s*\\d{1,3}[a-z]?(?:\\s*(?:[-–—]\\s*\\d{1,3}[a-z]?(?:\\s*[:.]\\s*\\d{1,3}[a-z]?)?|ff\\b))?(?:\\s*,\\s*\\d{1,3}[a-z]?(?:\\s*[:.]\\s*\\d{1,3}[a-z]?)?(?:\\s*[-–—]\\s*\\d{1,3}[a-z]?(?:\\s*[:.]\\s*\\d{1,3}[a-z]?)?)?)*|\\s*[-–—]\\s*\\d{1,3}[a-z]?)?)(?:\\s*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
+    `(?<![\\p{L}\\p{N}_])((?:${escapedAliases.join('|')})\\.?)(?:\\s+)(\\d{1,3}(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?(?:\\s*(?:${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?|ff\\b))?(?:\\s*,\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?)?)*|\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
     'giu'
   );
 
   // Chained continuation regex right after a matched reference: e.g. "; 14:6" or ", 18-20"
   const CHAIN_CONTINUATION_REGEX = new RegExp(
-    `^(\\s*([,;])\\s*(?:(?:and|or|&|cf\\.?|v\\.?|vv\\.?)\\s+)?)(\\d{1,3}[a-z]?(?:\\s*[:.]\\s*\\d{1,3}[a-z]?)?(?:\\s*[-–—]\\s*\\d{1,3}[a-z]?(?:\\s*[:.]\\s*\\d{1,3}[a-z]?)?)?)(?:\\s*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
+    `^(\\s*(?:([,;])\\s*)?(?:(?:and|or|&|cf\\.?|v\\.?|vv\\.?)\\s+)?)(\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
     'iu'
   );
+
+  /**
+   * Normalizes arbitrary dash, colon, and space variants into standard ASCII characters.
+   */
+  function normalizeSpec(specStr) {
+    if (!specStr) return '';
+    let s = specStr
+      .replace(/[\u200B\u200C\u200D\uFEFF]/g, '')
+      .replace(new RegExp(DASH_PART, 'gi'), '-')
+      .replace(new RegExp(COLON_PART, 'gi'), ':')
+      .replace(/:\s*:\s*/g, ':')
+      .replace(/\s*([:,-])\s*/g, '$1')
+      .trim();
+    // Normalize format like "6,1-7" or "6,1" where chapter and verse are separated by comma
+    s = s.replace(/^(\d{1,3}),(\d{1,3}(?:-|\b))/, '$1:$2');
+    return s;
+  }
 
   /**
    * Parses and validates a book + chapter/verse spec string into structured segments.
@@ -785,7 +806,8 @@
 
     const cleanAlias = normalizeBookKey(rawAliasUsed);
     const hasExplicitPeriod = rawAliasUsed.trim().endsWith('.');
-    const cleanedSpec = specStr.replace(/[a-z]+$/i, '').trim();
+    const normalized = normalizeSpec(specStr);
+    const cleanedSpec = normalized.replace(/[a-z]+$/i, '').trim();
 
     // Split comma-separated segments within the same reference if any: e.g. "3:16-18, 20"
     const subParts = cleanedSpec.split(/\s*,\s*/);
@@ -797,7 +819,7 @@
       if (!part) continue;
 
       // Case A: Cross-chapter range "1:26-2:3"
-      const crossMatch = part.match(/^(\d{1,3})\s*[:.]\s*(\d{1,3})[a-z]?\s*[-–—]\s*(\d{1,3})\s*[:.]\s*(\d{1,3})[a-z]?$/i);
+      const crossMatch = part.match(/^(\d{1,3})\s*:\s*(\d{1,3})[a-z]?\s*-\s*(\d{1,3})\s*:\s*(\d{1,3})[a-z]?$/i);
       if (crossMatch) {
         const c1 = parseInt(crossMatch[1], 10);
         const v1 = parseInt(crossMatch[2], 10);
@@ -816,7 +838,7 @@
       }
 
       // Case B: Standard Chapter:Verse or Chapter:Verse-Verse "3:16" or "3:16-18"
-      const cvMatch = part.match(/^(\d{1,3})\s*[:.]\s*(\d{1,3})[a-z]?(?:\s*[-–—]\s*(\d{1,3})[a-z]?)?$/i);
+      const cvMatch = part.match(/^(\d{1,3})\s*:\s*(\d{1,3})[a-z]?(?:\s*-\s*(\d{1,3})[a-z]?)?$/i);
       if (cvMatch) {
         const ch = parseInt(cvMatch[1], 10);
         const v1 = parseInt(cvMatch[2], 10);
@@ -830,7 +852,7 @@
       }
 
       // Case C: Bare number or number range ("23" or "3-4" or ", 18")
-      const bareMatch = part.match(/^(\d{1,3})[a-z]?(?:\s*[-–—]\s*(\d{1,3})[a-z]?)?$/i);
+      const bareMatch = part.match(/^(\d{1,3})[a-z]?(?:\s*-\s*(\d{1,3})[a-z]?)?$/i);
       if (bareMatch) {
         const n1 = parseInt(bareMatch[1], 10);
         const n2 = bareMatch[2] ? parseInt(bareMatch[2], 10) : n1;
@@ -1028,6 +1050,8 @@
     resolveBook,
     findReferencesInText,
     parseSingleReference,
+    normalizeSpec,
+    parseAndValidateSpec,
     formatCanonicalLabel
   };
 

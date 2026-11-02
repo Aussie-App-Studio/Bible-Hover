@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   defaultTranslation: 'BSB',
   studyResource: 'biblehub', // 'biblehub' | 'thesingingbible' | 'bible_com' | 'youversion' | 'desiringgod' | 'youtube'
+  detectInlineTranslations: true, // auto-switch translation when citation includes a version tag (e.g. "Rom 6:1-7 NIV")
   showTranslationBar: true,  // show/hide translation switcher pill bar in hover card
   minimalistMode: false,     // pure scripture only (hide all links, translations, buttons & footers)
   enabledTranslations: ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'],
@@ -23,8 +24,8 @@ const DEFAULT_SETTINGS = {
   hoverDelay: 120,
   disabledDomains: [],
   commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
-  preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'tgc'
-  multiPillResources: ['commentary', 'tgc', 'thesingingbible', 'youtube']
+  preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
+  multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube']
 };
 
 // In-memory caches for instant 0ms lookups

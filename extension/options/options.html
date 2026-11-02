@@ -320,6 +320,17 @@
                 <span class="slider"></span>
               </label>
             </div>
+
+            <div class="form-row toggle-row" style="margin-top:16px;">
+              <div class="form-label-group">
+                <label for="detectInlineTranslations" style="cursor:pointer; font-weight:600;">Auto-Detect Cited Bible Versions</label>
+                <span class="form-desc">When a webpage reference cites a specific translation (e.g. "Romans 6:1-7 NIV"), automatically display that version</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="detectInlineTranslations" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
           <!-- Translation Picker Grid -->
@@ -416,14 +427,21 @@
                 <span class="form-desc">Primary author used when linking to commentary or opening notes</span>
               </div>
               <select id="preferredCommentary" class="dash-select" style="min-width:280px;">
-                <option value="matthew_henry">Matthew Henry Commentary</option>
-                <option value="john_calvin">John Calvin Commentaries</option>
-                <option value="jfb">Jamieson-Fausset-Brown (JFB)</option>
-                <option value="maclaren">Alexander MacLaren Expositions</option>
-                <option value="biblehub_all">BibleHub All (Multi-Commentator)</option>
-                <option value="john_gill">John Gill Exposition</option>
-                <option value="geneva_1599">Geneva Study Bible (1599 Notes)</option>
-                <option value="tgc">The Gospel Coalition (TGC)</option>
+                <optgroup label="Modern Expository & Pastoral Commentaries">
+                  <option value="guzik">David Guzik (Enduring Word)</option>
+                  <option value="constable">Dr. Thomas Constable (Expository Notes)</option>
+                  <option value="tgc">The Gospel Coalition (TGC)</option>
+                  <option value="utley">Dr. Bob Utley (Free Bible Commentary)</option>
+                </optgroup>
+                <optgroup label="Classical & Reformed Commentaries (BibleHub)">
+                  <option value="biblehub_all">BibleHub All (Multi-Commentator)</option>
+                  <option value="matthew_henry">Matthew Henry Commentary</option>
+                  <option value="john_calvin">John Calvin Commentaries</option>
+                  <option value="jfb">Jamieson-Fausset-Brown (JFB)</option>
+                  <option value="maclaren">Alexander MacLaren Expositions</option>
+                  <option value="john_gill">John Gill Exposition</option>
+                  <option value="geneva_1599">Geneva Study Bible (1599 Notes)</option>
+                </optgroup>
               </select>
             </div>
 
@@ -446,10 +464,13 @@
             <div id="multiPillsSection" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color); display:none;">
               <label style="font-weight:600; font-size:12.5px; display:block; margin-bottom:8px;">Active Footer Resource Pills (Option 4):</label>
               <div class="pills-picker-row">
-                <label class="dash-chip"><input type="checkbox" value="commentary" checked><span>💬 Commentaries</span></label>
+                <label class="dash-chip"><input type="checkbox" value="commentary" checked><span>💬 BibleHub</span></label>
+                <label class="dash-chip"><input type="checkbox" value="guzik" checked><span>✝️ Guzik</span></label>
                 <label class="dash-chip"><input type="checkbox" value="tgc" checked><span>🏛 TGC</span></label>
-                <label class="dash-chip"><input type="checkbox" value="thesingingbible" checked><span>🎵 TheSinging.Bible</span></label>
-                <label class="dash-chip"><input type="checkbox" value="youtube" checked><span>📺 YouTube</span></label>
+                <label class="dash-chip"><input type="checkbox" value="constable" checked><span>📚 Constable</span></label>
+                <label class="dash-chip"><input type="checkbox" value="utley"><span>🌐 Utley</span></label>
+                <label class="dash-chip"><input type="checkbox" value="thesingingbible"><span>🎵 TheSinging.Bible</span></label>
+                <label class="dash-chip"><input type="checkbox" value="youtube"><span>📺 YouTube</span></label>
                 <label class="dash-chip"><input type="checkbox" value="bible_com"><span>📖 Bible.com</span></label>
               </div>
             </div>

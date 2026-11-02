@@ -135,6 +135,18 @@
         </label>
       </div>
 
+      <!-- Auto-Detect Cited Translations -->
+      <div class="setting-row">
+        <div>
+          <label for="detectInlineTranslations" style="font-weight: 600; cursor: pointer;">Auto-Detect Cited Versions</label>
+          <p class="setting-hint" style="margin-top: 1px;">Use cited translation if stated (e.g. "Rom 6:1-7 NIV")</p>
+        </div>
+        <label class="switch mini-switch" title="Auto-detect cited Bible versions">
+          <input type="checkbox" id="detectInlineTranslations" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
       <!-- Visible Translations in Tooltip -->
       <div class="setting-block">
         <div class="setting-row" style="margin-bottom: 6px;">
@@ -235,24 +247,34 @@
         <div class="setting-row" id="prefCommentaryRow">
           <label for="preferredCommentary">Commentary Source</label>
           <select id="preferredCommentary" class="select-input">
-            <option value="matthew_henry">Matthew Henry Commentary</option>
-            <option value="john_calvin">John Calvin Commentaries</option>
-            <option value="jfb">Jamieson-Fausset-Brown (JFB)</option>
-            <option value="maclaren">Alexander MacLaren Expositions</option>
-            <option value="biblehub_all">BibleHub All (Multi-Commentator)</option>
-            <option value="john_gill">John Gill Exposition</option>
-            <option value="geneva_1599">Geneva Study Bible (1599 Notes)</option>
-            <option value="tgc">The Gospel Coalition (TGC)</option>
+            <optgroup label="Modern Expository & Pastoral">
+              <option value="guzik">David Guzik (Enduring Word)</option>
+              <option value="constable">Dr. Thomas Constable (Expository Notes)</option>
+              <option value="tgc">The Gospel Coalition (TGC)</option>
+              <option value="utley">Dr. Bob Utley (Free Bible Commentary)</option>
+            </optgroup>
+            <optgroup label="Classical & Reformed (BibleHub)">
+              <option value="biblehub_all">BibleHub All (Multi-Commentator)</option>
+              <option value="matthew_henry">Matthew Henry Commentary</option>
+              <option value="john_calvin">John Calvin Commentaries</option>
+              <option value="jfb">Jamieson-Fausset-Brown (JFB)</option>
+              <option value="maclaren">Alexander MacLaren Expositions</option>
+              <option value="john_gill">John Gill Exposition</option>
+              <option value="geneva_1599">Geneva Study Bible (1599 Notes)</option>
+            </optgroup>
           </select>
         </div>
 
         <div id="multiPillsConfig" style="display: none; margin-top: 8px;">
           <label style="font-size: 12px; font-weight: 600; color: #4b5563; display:block; margin-bottom: 4px;">Active Footer Pills:</label>
           <div class="translation-chips" id="multiPillChips">
-            <label class="trans-chip"><input type="checkbox" value="commentary" checked><span>💬 Commentaries</span></label>
+            <label class="trans-chip"><input type="checkbox" value="commentary" checked><span>💬 BibleHub</span></label>
+            <label class="trans-chip"><input type="checkbox" value="guzik" checked><span>✝️ Guzik</span></label>
             <label class="trans-chip"><input type="checkbox" value="tgc" checked><span>🏛 TGC</span></label>
-            <label class="trans-chip"><input type="checkbox" value="thesingingbible" checked><span>🎵 TheSinging.Bible</span></label>
-            <label class="trans-chip"><input type="checkbox" value="youtube" checked><span>📺 YouTube</span></label>
+            <label class="trans-chip"><input type="checkbox" value="constable" checked><span>📚 Constable</span></label>
+            <label class="trans-chip"><input type="checkbox" value="utley"><span>🌐 Utley</span></label>
+            <label class="trans-chip"><input type="checkbox" value="thesingingbible"><span>🎵 TheSinging.Bible</span></label>
+            <label class="trans-chip"><input type="checkbox" value="youtube"><span>📺 YouTube</span></label>
             <label class="trans-chip"><input type="checkbox" value="bible_com"><span>📖 Bible.com</span></label>
           </div>
         </div>
