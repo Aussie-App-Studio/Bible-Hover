@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Bible Hover — Instant Scripture & Commentary Previews",
   "short_name": "Bible Hover",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Instant 0ms hover previews for Bible scripture references with multiple offline & online translations and study commentaries.",
   "icons": {
     "16": "icons/icon16.png",
