@@ -22,6 +22,7 @@
     detectInlineTranslations: true,
     studyResource: 'biblehub', // 'biblehub' | 'thesingingbible' | 'bible_com' | 'youversion' | 'desiringgod' | 'youtube'
     showTranslationBar: true,
+    showSettingsButton: true,
     minimalistMode: false,
     enabledTranslations: ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'],
     theme: 'auto',
@@ -305,6 +306,79 @@
         stroke: currentColor;
         stroke-width: 2;
         fill: none;
+      }
+
+      /* Settings Button Wrapper & Tooltip */
+      .bh-settings-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+      .bh-settings-tooltip {
+        position: absolute;
+        top: calc(100% + 7px);
+        right: -4px;
+        background: #111827;
+        color: #f9fafb;
+        padding: 6px 10px;
+        border-radius: 7px;
+        font-size: 11px;
+        line-height: 1.35;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-4px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        box-shadow: 0 8px 20px -2px rgba(0, 0, 0, 0.35);
+        z-index: 1000;
+        text-align: right;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .bh-settings-tooltip-title {
+        font-weight: 600;
+        font-size: 11.5px;
+        color: #ffffff;
+      }
+      .bh-settings-tooltip-sub {
+        font-size: 10px;
+        color: #9ca3af;
+        margin-top: 1px;
+      }
+      .bh-settings-tooltip::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        right: 10px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent #111827 transparent;
+      }
+      .bh-settings-wrapper:hover .bh-settings-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+      .bh-tooltip.theme-dark .bh-settings-tooltip {
+        background: #1f2227;
+        border-color: #374151;
+      }
+      .bh-tooltip.theme-dark .bh-settings-tooltip::before {
+        border-bottom-color: #1f2227;
+      }
+      .bh-tooltip.theme-sepia .bh-settings-tooltip {
+        background: #3c2f1f;
+        color: #fdf6e2;
+        border-color: #5c4731;
+      }
+      .bh-tooltip.theme-sepia .bh-settings-tooltip-title {
+        color: #fff9ed;
+      }
+      .bh-tooltip.theme-sepia .bh-settings-tooltip-sub {
+        color: #d6c7b0;
+      }
+      .bh-tooltip.theme-sepia .bh-settings-tooltip::before {
+        border-bottom-color: #3c2f1f;
       }
 
       /* Minimalist Mode (Pure Scripture Only) */
@@ -1022,6 +1096,18 @@
             <svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
             <span id="bhCopyText" style="margin-left:4px;">Copy</span>
           </button>
+          <div class="bh-settings-wrapper" id="bhSettingsWrapper">
+            <button class="bh-btn" id="bhSettingsBtn" aria-label="Bible Hover Settings" title="Bible Hover Settings">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              </svg>
+            </button>
+            <div class="bh-settings-tooltip">
+              <div class="bh-settings-tooltip-title">Settings & Customization</div>
+              <div class="bh-settings-tooltip-sub">Tip: Can be hidden in Settings</div>
+            </div>
+          </div>
           <button class="bh-btn" id="bhCloseBtn" title="Close">
             <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
@@ -1058,6 +1144,18 @@
           <span class="bh-badge" id="bhDrawerBadge">Study Drawer</span>
         </div>
         <div class="bh-drawer-actions">
+          <div class="bh-settings-wrapper" id="bhDrawerSettingsWrapper">
+            <button class="bh-btn bh-btn-icon" id="bhDrawerSettingsBtn" aria-label="Bible Hover Settings" title="Bible Hover Settings">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              </svg>
+            </button>
+            <div class="bh-settings-tooltip">
+              <div class="bh-settings-tooltip-title">Settings & Customization</div>
+              <div class="bh-settings-tooltip-sub">Tip: Can be hidden in Settings</div>
+            </div>
+          </div>
           <a class="bh-btn" id="bhDrawerFeedbackBtn" href="https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform" target="_blank" rel="noopener noreferrer" title="Feedback / Report Issue">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           </a>
@@ -1149,6 +1247,35 @@
     // Mode 3 Drawer Close
     const drawerCloseBtn = shadowRoot.getElementById('bhDrawerCloseBtn');
     drawerCloseBtn?.addEventListener('click', closeStudyDrawer);
+
+    // Settings Button Handlers (Opens Options Dashboard)
+    const bhSettingsBtn = shadowRoot.getElementById('bhSettingsBtn');
+    bhSettingsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      safeSendMessage({ type: 'OPEN_OPTIONS' });
+    });
+
+    const bhDrawerSettingsBtn = shadowRoot.getElementById('bhDrawerSettingsBtn');
+    bhDrawerSettingsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      safeSendMessage({ type: 'OPEN_OPTIONS' });
+    });
+
+    updateSettingsButtonVisibility();
+  }
+
+  // Update visibility of the in-card settings buttons based on user preference
+  function updateSettingsButtonVisibility() {
+    const wrapper = shadowRoot?.getElementById('bhSettingsWrapper');
+    if (wrapper) {
+      wrapper.style.display = (config.showSettingsButton !== false && !config.minimalistMode) ? 'inline-flex' : 'none';
+    }
+    const drawerWrapper = shadowRoot?.getElementById('bhDrawerSettingsWrapper');
+    if (drawerWrapper) {
+      drawerWrapper.style.display = (config.showSettingsButton !== false) ? 'inline-flex' : 'none';
+    }
   }
 
   // Determine current active theme
@@ -2168,6 +2295,7 @@
     const minClass = config.minimalistMode ? 'bh-minimalist' : '';
     const fontFam = `font-family-${config.scriptureFont || 'sans'}`;
     tooltipEl.className = `bh-tooltip theme-${theme} font-${config.fontSize} ${fontFam} ${minClass}`.trim();
+    updateSettingsButtonVisibility();
 
     // Set title
     const titleEl = shadowRoot.querySelector('.bh-ref-title');
@@ -2477,6 +2605,10 @@
           if (resCachedPassage) {
             updateCardFooterActions(resCachedPassage);
           }
+        }
+
+        if (changes.showSettingsButton || changes.minimalistMode) {
+          updateSettingsButtonVisibility();
         }
 
         if (changes.enabled || changes.disabledDomains) {

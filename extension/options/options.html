@@ -213,6 +213,17 @@
 
               <div class="form-row toggle-row">
                 <div class="form-label-group">
+                  <label for="showSettingsButton" style="cursor:pointer; font-weight:600;">Show Settings Icon on Cards</label>
+                  <span class="form-desc">Shows a quick settings gear icon in scripture hover cards & drawers for 1-click access. Turn off if you only want to open settings via the extension icon.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="showSettingsButton" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="form-row toggle-row">
+                <div class="form-label-group">
                   <label for="minimalistMode" style="cursor:pointer; font-weight:600;">Pure Scripture Mode (Minimalist)</label>
                   <span class="form-desc">Hides all translations, buttons, and commentary tabs for pure, distraction-free reading. Click text to copy.</span>
                 </div>
@@ -248,6 +259,14 @@
                       </div>
                     </div>
                     <div class="bh-actions">
+                      <div class="bh-settings-wrapper" id="previewSettingsWrapper" style="display:inline-flex;">
+                        <button class="bh-btn" id="previewSettingsBtn" title="Bible Hover Settings (Tip: Can be hidden in Settings)">
+                          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+                          </svg>
+                        </button>
+                      </div>
                       <button class="bh-btn" id="previewCopyBtn" title="Copy verse text">
                         <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                         <span style="margin-left:3px;">Copy</span>

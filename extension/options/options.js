@@ -104,6 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       'defaultTranslation',
       'detectInlineTranslations',
       'showTranslationBar',
+      'showSettingsButton',
       'enabledTranslations',
       'commentaryMode',
       'preferredCommentary',
@@ -125,6 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     defaultTranslation: stored.defaultTranslation || 'BSB',
     detectInlineTranslations: stored.detectInlineTranslations !== false,
     showTranslationBar: stored.showTranslationBar !== false,
+    showSettingsButton: stored.showSettingsButton !== false,
     enabledTranslations: Array.isArray(stored.enabledTranslations) && stored.enabledTranslations.length > 0
       ? stored.enabledTranslations
       : ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'],
@@ -231,6 +233,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabBar = document.getElementById('previewTabBar');
     const transBar = document.getElementById('previewTransBar');
     const commBar = document.getElementById('previewCommBar');
+    const previewSettingsWrapper = document.getElementById('previewSettingsWrapper');
+
+    if (previewSettingsWrapper) {
+      previewSettingsWrapper.style.display = (config.showSettingsButton !== false && !config.minimalistMode) ? 'inline-flex' : 'none';
+    }
 
     if (config.commentaryMode === 'in_card_tab') {
       if (tabBar) tabBar.style.display = 'inline-flex';
@@ -262,6 +269,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   minimalistMode?.addEventListener('change', () => {
     saveConfig({ minimalistMode: minimalistMode.checked });
+  });
+
+  const showSettingsButton = document.getElementById('showSettingsButton');
+  if (showSettingsButton) showSettingsButton.checked = config.showSettingsButton;
+  showSettingsButton?.addEventListener('change', () => {
+    saveConfig({ showSettingsButton: showSettingsButton.checked });
   });
 
   // 5. Tab 2: Translations & Languages Manager

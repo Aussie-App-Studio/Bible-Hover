@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
   studyResource: 'biblehub', // 'biblehub' | 'thesingingbible' | 'bible_com' | 'youversion' | 'desiringgod' | 'youtube'
   detectInlineTranslations: true, // auto-switch translation when citation includes a version tag (e.g. "Rom 6:1-7 NIV")
   showTranslationBar: true,  // show/hide translation switcher pill bar in hover card
+  showSettingsButton: true,  // show/hide quick settings gear icon in hover card
   minimalistMode: false,     // pure scripture only (hide all links, translations, buttons & footers)
   enabledTranslations: ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'],
   theme: 'auto',          // 'auto' | 'light' | 'dark' | 'sepia'
@@ -903,6 +904,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const text = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
             chrome.action.setBadgeText({ tabId: sender.tab.id, text }).catch(() => {});
             chrome.action.setBadgeBackgroundColor({ tabId: sender.tab.id, color: '#1e2952' }).catch(() => {});
+          }
+          sendResponse({ ok: true });
+          break;
+        }
+
+        case 'OPEN_OPTIONS': {
+          try {
+            if (chrome.runtime.openOptionsPage) {
+              chrome.runtime.openOptionsPage();
+            } else {
+              chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') });
+            }
+          } catch (_) {
+            chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') });
           }
           sendResponse({ ok: true });
           break;

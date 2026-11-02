@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const defaultTranslation = document.getElementById('defaultTranslation');
   const studyResource = document.getElementById('studyResource');
   const minimalistMode = document.getElementById('minimalistMode');
+  const showSettingsButton = document.getElementById('showSettingsButton');
   const detectInlineTranslations = document.getElementById('detectInlineTranslations');
   const showTranslationBar = document.getElementById('showTranslationBar');
   const translationChipsContainer = document.getElementById('translationChips');
@@ -97,6 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'detectInlineTranslations',
     'studyResource',
     'showTranslationBar',
+    'showSettingsButton',
     'minimalistMode',
     'enabledTranslations',
     'theme',
@@ -126,6 +128,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       detectInlineTranslations.checked = stored.detectInlineTranslations;
     }
     if (stored.minimalistMode !== undefined) minimalistMode.checked = stored.minimalistMode;
+    if (stored.showSettingsButton !== undefined && showSettingsButton) {
+      showSettingsButton.checked = stored.showSettingsButton;
+    }
 
     if (Array.isArray(stored.enabledTranslations)) {
       const activeSet = new Set(stored.enabledTranslations);
@@ -266,6 +271,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   minimalistMode.addEventListener('change', () => {
     chrome.storage.local.set({ minimalistMode: minimalistMode.checked });
+  });
+
+  showSettingsButton?.addEventListener('change', () => {
+    chrome.storage.local.set({ showSettingsButton: showSettingsButton.checked });
   });
 
   function updateIntlActiveCount(activeSet) {
