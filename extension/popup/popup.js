@@ -602,9 +602,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const openDashboardBtn = document.getElementById('openDashboardBtn');
   const footerDashboardLink = document.getElementById('footerDashboardLink');
+  const footerWelcomeLink = document.getElementById('footerWelcomeLink');
   const footerFeedbackLink = document.getElementById('footerFeedbackLink');
   openDashboardBtn?.addEventListener('click', openFullDashboard);
   footerDashboardLink?.addEventListener('click', openFullDashboard);
+  footerWelcomeLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('welcome/welcome.html') });
+    } else {
+      window.open(chrome.runtime.getURL('welcome/welcome.html'));
+    }
+  });
   footerFeedbackLink?.addEventListener('click', (e) => {
     e.preventDefault();
     const url = 'https://docs.google.com/forms/d/e/1FAIpQLSfgsw6-DU97aqOTvIyiBVZMiO3Xv8VrK_0QkT09ZIGhU6D2Sw/viewform';

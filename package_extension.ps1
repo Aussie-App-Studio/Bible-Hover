@@ -17,7 +17,7 @@ $stagingDir = "$distDir\staging"
 if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
 New-Item -ItemType Directory -Path $stagingDir | Out-Null
 
-Copy-Item -Path "$sourceDir\*" -Destination $stagingDir -Recurse -Exclude "test-page.html"
+Copy-Item -Path "$sourceDir\*" -Destination $stagingDir -Recurse
 
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 Compress-Archive -Path "$stagingDir\*" -DestinationPath $zipPath -Force

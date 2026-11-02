@@ -51,7 +51,9 @@
     {
       "resources": [
         "data/bsb.json",
-        "icons/*.png"
+        "icons/*.png",
+        "welcome/*",
+        "test-page.html"
       ],
       "matches": ["<all_urls>"]
     }

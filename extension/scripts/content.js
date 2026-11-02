@@ -1073,6 +1073,110 @@
       .bh-drawer.theme-dark .bh-source-btn.secondary:hover {
         background: rgba(255, 255, 255, 0.08);
       }
+
+      /* In-Card Rating Prompt Overlay */
+      .bh-rate-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        backdrop-filter: blur(8px);
+        animation: bhFadeIn 0.2s ease-out;
+      }
+      .bh-tooltip.theme-light .bh-rate-overlay {
+        background: rgba(255, 255, 255, 0.95);
+        color: #0f172a;
+      }
+      .bh-tooltip.theme-dark .bh-rate-overlay {
+        background: rgba(20, 22, 28, 0.96);
+        color: #f8fafc;
+      }
+      .bh-tooltip.theme-sepia .bh-rate-overlay {
+        background: rgba(253, 246, 226, 0.96);
+        color: #433422;
+      }
+      .bh-rate-card {
+        position: relative;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 360px;
+      }
+      .bh-rate-close {
+        position: absolute;
+        top: -12px;
+        right: -8px;
+        background: transparent;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.55;
+        padding: 4px;
+        transition: opacity 0.15s ease;
+      }
+      .bh-rate-close:hover {
+        opacity: 1;
+      }
+      .bh-rate-stars {
+        font-size: 20px;
+        letter-spacing: 2px;
+        user-select: none;
+      }
+      .bh-rate-title {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .bh-rate-msg {
+        font-size: 12px;
+        line-height: 1.55;
+        opacity: 0.88;
+        font-style: italic;
+      }
+      .bh-rate-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        width: 100%;
+        margin-top: 4px;
+      }
+      .bh-rate-btn-primary {
+        background: #2563eb;
+        color: #ffffff !important;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 12.5px;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+        transition: all 0.15s ease;
+        display: block;
+        text-align: center;
+      }
+      .bh-rate-btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+      }
+      .bh-rate-btn-secondary {
+        background: transparent;
+        border: 1px solid rgba(125, 125, 125, 0.3);
+        color: inherit;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+      .bh-rate-btn-secondary:hover {
+        background: rgba(125, 125, 125, 0.12);
       }
     `;
 
@@ -1082,6 +1186,20 @@
     tooltipEl = document.createElement('div');
     tooltipEl.className = 'bh-tooltip';
     tooltipEl.innerHTML = `
+      <div class="bh-rate-overlay" id="bhRateOverlay" style="display: none;">
+        <div class="bh-rate-card">
+          <button class="bh-rate-close" id="bhRateCloseBtn" title="Close & continue to scripture">✕</button>
+          <div class="bh-rate-stars">⭐⭐⭐⭐⭐</div>
+          <div class="bh-rate-title">Help Others Discover Bible Hover</div>
+          <div class="bh-rate-msg">
+            “If this app is helpful to you and you think it will be helpful to others, please rate it on the extension store. Google heavily weights reviews when deciding how much to highlight or hide extensions, and it would be nice for many people to benefit from the work.”
+          </div>
+          <div class="bh-rate-actions">
+            <a class="bh-rate-btn-primary" id="bhRateStoreBtn" target="_blank" rel="noopener noreferrer">⭐ Rate on Extension Store ↗</a>
+            <button class="bh-rate-btn-secondary" id="bhRateLaterBtn">Continue to Scripture →</button>
+          </div>
+        </div>
+      </div>
       <div class="bh-header">
         <div class="bh-title-group">
           <span class="bh-ref-title">Reference</span>
@@ -1197,6 +1315,29 @@
 
     const closeBtn = shadowRoot.getElementById('bhCloseBtn');
     closeBtn.addEventListener('click', () => hideTooltip(true));
+
+    // Rating & Review in-card overlay listeners
+    const rateOverlay = shadowRoot.getElementById('bhRateOverlay');
+    const rateStoreBtn = shadowRoot.getElementById('bhRateStoreBtn');
+    const rateCloseBtn = shadowRoot.getElementById('bhRateCloseBtn');
+    const rateLaterBtn = shadowRoot.getElementById('bhRateLaterBtn');
+    const STORE_REVIEW_URL = `https://chromewebstore.google.com/detail/bible-hover/${chrome.runtime?.id || 'makhkcghaglcfnicpkckpbimlmhobcop'}/reviews`;
+
+    if (rateStoreBtn) {
+      rateStoreBtn.href = STORE_REVIEW_URL;
+      rateStoreBtn.addEventListener('click', () => {
+        chrome.storage.local.set({ hasRatedOrShared: true });
+        if (rateOverlay) rateOverlay.style.display = 'none';
+      });
+    }
+
+    const dismissRatePrompt = () => {
+      chrome.storage.local.set({ lastPromptDate: Date.now() });
+      if (rateOverlay) rateOverlay.style.display = 'none';
+    };
+
+    rateCloseBtn?.addEventListener('click', dismissRatePrompt);
+    rateLaterBtn?.addEventListener('click', dismissRatePrompt);
 
     const copyBtn = shadowRoot.getElementById('bhCopyBtn');
     copyBtn.addEventListener('click', handleCopyVerse);
@@ -2310,10 +2451,49 @@
       openStudyDrawer(parsedRef);
     }
 
+    // Check if in-card rating prompt should appear after a couple of uses
+    checkInCardRatingPrompt();
+
     // Initial positioning & show
     tooltipEl.classList.add('visible');
     positionTooltip(target);
   }
+
+  function checkInCardRatingPrompt() {
+    const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
+    if (!rateOverlay) return;
+
+    try {
+      chrome.storage.local.get(['verseHoverCount', 'hasRatedOrShared', 'lastPromptDate'], (data) => {
+        if (!data || data.hasRatedOrShared) {
+          rateOverlay.style.display = 'none';
+          return;
+        }
+
+        const count = data.verseHoverCount || 0;
+        const now = Date.now();
+        const lastPrompt = data.lastPromptDate || 0;
+        const daysSinceLastPrompt = (now - lastPrompt) / (1000 * 60 * 60 * 24);
+
+        // Trigger after the extension has been used a couple of times (>= 5 hovers), snoozed for 7 days
+        if (count >= 5 && daysSinceLastPrompt >= 7) {
+          rateOverlay.style.display = 'flex';
+        } else {
+          rateOverlay.style.display = 'none';
+        }
+      });
+    } catch {
+      rateOverlay.style.display = 'none';
+    }
+  }
+
+  // Developer / test trigger for testing the in-card rating overlay
+  window.addEventListener('message', (e) => {
+    if (e.data === 'BH_TEST_SHOW_RATE_OVERLAY') {
+      const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
+      if (rateOverlay) rateOverlay.style.display = 'flex';
+    }
+  });
 
   function scheduleHideTooltip() {
     clearTimeout(hideTimer);

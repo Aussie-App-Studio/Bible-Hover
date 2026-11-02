@@ -260,8 +260,8 @@ try {
   console.warn('Alarms setup notice:', err);
 }
 
-// Initialize default settings on install
-chrome.runtime.onInstalled.addListener(async () => {
+// Initialize default settings on install & launch welcome page
+chrome.runtime.onInstalled.addListener(async (details) => {
   const stored = await chrome.storage.local.get(Object.keys(DEFAULT_SETTINGS));
   const toSet = {};
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
@@ -276,6 +276,15 @@ chrome.runtime.onInstalled.addListener(async () => {
   // Auto-migrate legacy 'gty' setting to 'thesingingbible'
   if (stored.studyResource === 'gty') {
     await chrome.storage.local.set({ studyResource: 'thesingingbible' });
+  }
+
+  // Open Welcome Page on first install
+  if (details?.reason === 'install') {
+    try {
+      chrome.tabs.create({ url: chrome.runtime.getURL('welcome/welcome.html') });
+    } catch (err) {
+      console.warn('[Bible Hover] Could not launch welcome tab:', err);
+    }
   }
 
   // Pre-warm default bundled Bible
