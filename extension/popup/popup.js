@@ -4,7 +4,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const { parseSingleReference, TRANSLATIONS } = window.BibleHoverMeta;
+  const BibleHoverMeta = (typeof window !== 'undefined' ? window.BibleHoverMeta : null) || globalThis.BibleHoverMeta || {};
+  const parseSingleReference = BibleHoverMeta.parseSingleReference || (() => null);
+  const TRANSLATIONS = BibleHoverMeta.TRANSLATIONS || {};
 
   // DOM Elements
   const globalToggle = document.getElementById('globalToggle');

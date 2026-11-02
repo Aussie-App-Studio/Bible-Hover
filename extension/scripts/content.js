@@ -11,7 +11,9 @@
   if (window.__BIBLE_HOVER_INITIALIZED__) return;
   window.__BIBLE_HOVER_INITIALIZED__ = true;
 
-  const { findReferencesInText, TRANSLATIONS } = window.BibleHoverMeta;
+  const BibleHoverMeta = (typeof window !== 'undefined' ? window.BibleHoverMeta : null) || globalThis.BibleHoverMeta || {};
+  const findReferencesInText = BibleHoverMeta.findReferencesInText || (() => []);
+  const TRANSLATIONS = BibleHoverMeta.TRANSLATIONS || {};
 
   // Configuration state
   let config = {
@@ -68,8 +70,35 @@
 
   // Check if current hostname is disabled in settings
   function checkSiteDisabled(disabledDomains) {
+    if (!Array.isArray(disabledDomains)) return false;
     const host = window.location.hostname.toLowerCase();
     return disabledDomains.some(d => host === d.toLowerCase() || host.endsWith('.' + d.toLowerCase()));
+  }
+
+  // Safe message sender to prevent "Extension context invalidated" & unhandled lastError
+  function safeSendMessage(msg, callback) {
+    if (!chrome.runtime?.id) {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage(msg, (response) => {
+        if (chrome.runtime.lastError) {
+          // Handled silently to avoid logging "Receiving end does not exist"
+          return;
+        }
+        if (callback) callback(response);
+      });
+    } catch (e) {
+      // Extension context invalidated; detach observer
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+    }
   }
 
   // --- Tooltip & Shadow DOM Construction ---
@@ -1284,7 +1313,7 @@
       </div>
     `;
 
-    chrome.runtime.sendMessage({
+    safeSendMessage({
       type: 'GET_PASSAGE',
       parsedRef,
       translation,
@@ -1705,7 +1734,7 @@
     `;
 
     const firstV = passageRes.segments?.[0]?.verseStart || 1;
-    chrome.runtime.sendMessage({
+    safeSendMessage({
       type: 'GET_COMMENTARY',
       bookId: passageRes.bookId,
       chapter: passageRes.primaryChapter,
@@ -1862,7 +1891,7 @@
               <span>Loading Classical Commentary Notes...</span>
             </div>
           `;
-          chrome.runtime.sendMessage({
+          safeSendMessage({
             type: 'GET_COMMENTARY',
             bookId: passageRes.bookId,
             chapter: firstCh,
@@ -2318,10 +2347,10 @@
 
     // Update extension badge with detected count
     if (detectedRefCount > 0) {
-      chrome.runtime.sendMessage({
+      safeSendMessage({
         type: 'SET_BADGE_COUNT',
         count: detectedRefCount
-      }).catch(() => {});
+      });
     }
   }
 
@@ -2384,66 +2413,85 @@
   }, { passive: true });
 
   // Load settings and initialize
-  chrome.storage.local.get(null, (stored) => {
-    if (stored) {
-      config = { ...config, ...stored };
-    }
+  try {
+    if (chrome.runtime?.id && chrome.storage?.local) {
+      chrome.storage.local.get(null, (stored) => {
+        if (!chrome.runtime?.id || chrome.runtime.lastError) return;
+        if (stored) {
+          config = { ...config, ...stored };
+        }
 
-    isSiteDisabled = checkSiteDisabled(config.disabledDomains);
-    if (!config.enabled || isSiteDisabled) return;
+        isSiteDisabled = checkSiteDisabled(config.disabledDomains);
+        if (!config.enabled || isSiteDisabled) return;
 
-    updateDynamicUnderlineStyles();
+        updateDynamicUnderlineStyles();
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        scanElement(document.body);
-        setupMutationObserver();
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            scanElement(document.body);
+            setupMutationObserver();
+          });
+        } else {
+          scanElement(document.body);
+          setupMutationObserver();
+        }
       });
-    } else {
-      scanElement(document.body);
-      setupMutationObserver();
     }
-  });
+  } catch (e) {
+    // Suppress context invalidated during extension reload
+  }
 
   // Listen for settings changes from popup
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local') return;
+  try {
+    if (chrome.runtime?.id && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (!chrome.runtime?.id || area !== 'local') {
+          if (!chrome.runtime?.id && observer) {
+            observer.disconnect();
+            observer = null;
+          }
+          return;
+        }
 
-    let stylesNeedUpdate = false;
-    for (const [k, v] of Object.entries(changes)) {
-      config[k] = v.newValue;
-      if (k === 'underlineStyle' || k === 'underlineColor') {
-        stylesNeedUpdate = true;
-      }
+        let stylesNeedUpdate = false;
+        for (const [k, v] of Object.entries(changes)) {
+          config[k] = v.newValue;
+          if (k === 'underlineStyle' || k === 'underlineColor') {
+            stylesNeedUpdate = true;
+          }
+        }
+
+        isSiteDisabled = checkSiteDisabled(config.disabledDomains);
+
+        if (stylesNeedUpdate) {
+          updateDynamicUnderlineStyles();
+        }
+
+        if (changes.minimalistMode && tooltipEl) {
+          if (config.minimalistMode) {
+            tooltipEl.classList.add('bh-minimalist');
+          } else {
+            tooltipEl.classList.remove('bh-minimalist');
+          }
+          renderTranslationBar();
+          if (resCachedPassage) {
+            updateCardFooterActions(resCachedPassage);
+          }
+        }
+
+        if (changes.enabled || changes.disabledDomains) {
+          if (!config.enabled || isSiteDisabled) {
+            hideTooltip(true);
+            if (observer) observer.disconnect();
+          } else {
+            scanElement(document.body);
+            setupMutationObserver();
+          }
+        }
+      });
     }
-
-    isSiteDisabled = checkSiteDisabled(config.disabledDomains);
-
-    if (stylesNeedUpdate) {
-      updateDynamicUnderlineStyles();
-    }
-
-    if (changes.minimalistMode && tooltipEl) {
-      if (config.minimalistMode) {
-        tooltipEl.classList.add('bh-minimalist');
-      } else {
-        tooltipEl.classList.remove('bh-minimalist');
-      }
-      renderTranslationBar();
-      if (resCachedPassage) {
-        updateCardFooterActions(resCachedPassage);
-      }
-    }
-
-    if (changes.enabled || changes.disabledDomains) {
-      if (!config.enabled || isSiteDisabled) {
-        hideTooltip(true);
-        if (observer) observer.disconnect();
-      } else {
-        scanElement(document.body);
-        setupMutationObserver();
-      }
-    }
-  });
+  } catch (e) {
+    // Suppress context invalidated during extension reload
+  }
 
 })();

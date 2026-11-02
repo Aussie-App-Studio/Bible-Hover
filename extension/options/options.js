@@ -4,7 +4,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const { TRANSLATIONS, parseSingleReference } = window.BibleHoverMeta || {};
+  const BibleHoverMeta = (typeof window !== 'undefined' ? window.BibleHoverMeta : null) || globalThis.BibleHoverMeta || {};
+  const parseSingleReference = BibleHoverMeta.parseSingleReference || (() => null);
+  const TRANSLATIONS = BibleHoverMeta.TRANSLATIONS || {};
 
   // Auto-save toast
   const saveToast = document.getElementById('saveToast');
