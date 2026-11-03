@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dashShareBtn = document.getElementById('dashShareBtn');
   const dashShareText = document.getElementById('dashShareText');
   const dashShareNotice = document.getElementById('dashShareNotice');
-  const STORE_SHARE_URL = `https://chromewebstore.google.com/detail/bible-hover/${chrome.runtime?.id || 'makhkcghaglcfnicpkckpbimlmhobcop'}`;
+  const STORE_SHARE_URL = 'https://chromewebstore.google.com/detail/bible-hover-%E2%80%94-instant-scr/eikdpekimeeaiehcbnhigbjbgpcfnmbp';
   const STORE_SHARE_TEXT = 'Check out Bible Hover — instant 0ms scripture previews and study commentaries in your browser. 100% free with no ads!';
 
   dashShareBtn?.addEventListener('click', async () => {

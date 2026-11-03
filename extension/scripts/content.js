@@ -1391,7 +1391,7 @@
     const rateStoreBtn = shadowRoot.getElementById('bhRateStoreBtn');
     const rateCloseBtn = shadowRoot.getElementById('bhRateCloseBtn');
     const rateLaterBtn = shadowRoot.getElementById('bhRateLaterBtn');
-    const STORE_REVIEW_URL = `https://chromewebstore.google.com/detail/bible-hover/${chrome.runtime?.id || 'makhkcghaglcfnicpkckpbimlmhobcop'}/reviews`;
+    const STORE_REVIEW_URL = 'https://chromewebstore.google.com/detail/bible-hover-%E2%80%94-instant-scr/eikdpekimeeaiehcbnhigbjbgpcfnmbp';
 
     if (rateStoreBtn) {
       rateStoreBtn.href = STORE_REVIEW_URL;

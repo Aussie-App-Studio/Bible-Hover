@@ -665,8 +665,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // --- Organic Share & Rate Prompt System ---
-  const STORE_BASE_URL = `https://chromewebstore.google.com/detail/bible-hover/${chrome.runtime?.id || 'makhkcghaglcfnicpkckpbimlmhobcop'}`;
-  const STORE_REVIEWS_URL = `${STORE_BASE_URL}/reviews`;
+  const STORE_BASE_URL = 'https://chromewebstore.google.com/detail/bible-hover-%E2%80%94-instant-scr/eikdpekimeeaiehcbnhigbjbgpcfnmbp';
+  const STORE_REVIEWS_URL = STORE_BASE_URL;
   const SHARE_TEXT = `Check out Bible Hover — instant 0ms scripture previews and study commentaries in your browser. 100% free with no ads!`;
 
   const shareBanner = document.getElementById('shareBanner');
