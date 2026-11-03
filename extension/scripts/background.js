@@ -8,8 +8,23 @@ importScripts('../shared/bible-metadata.js');
 
 const { BOOKS, BOOK_BY_ID, TRANSLATIONS } = globalThis.BibleHoverMeta;
 
+const DEFAULT_DISABLED_DOMAINS = [
+  'docs.google.com',
+  'sheets.google.com',
+  'slides.google.com',
+  'drive.google.com',
+  'github.com',
+  'gitlab.com',
+  'vscode.dev',
+  'codepen.io',
+  'codesandbox.io',
+  'figma.com',
+  'canva.com'
+];
+
 const DEFAULT_SETTINGS = {
   enabled: true,
+  scanMode: 'auto',          // 'auto' | 'selection'
   defaultTranslation: 'BSB',
   studyResource: 'biblehub', // 'biblehub' | 'thesingingbible' | 'bible_com' | 'youversion' | 'desiringgod' | 'youtube'
   detectInlineTranslations: true, // auto-switch translation when citation includes a version tag (e.g. "Rom 6:1-7 NIV")
@@ -23,7 +38,8 @@ const DEFAULT_SETTINGS = {
   fontSize: 'medium',     // 'small' | 'medium' | 'large'
   scriptureFont: 'sans',  // 'sans' | 'serif' | 'garamond' | 'humanist' | 'dyslexic' | 'mono'
   hoverDelay: 120,
-  disabledDomains: [],
+  disabledDomains: DEFAULT_DISABLED_DOMAINS,
+  defaultDomainsSeeded: true,
   commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
   preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
   multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube'],
@@ -267,6 +283,11 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
     if (stored[k] === undefined) toSet[k] = v;
   }
+  if (!stored.defaultDomainsSeeded) {
+    const existing = Array.isArray(stored.disabledDomains) ? stored.disabledDomains : [];
+    toSet.disabledDomains = Array.from(new Set([...existing, ...DEFAULT_DISABLED_DOMAINS]));
+    toSet.defaultDomainsSeeded = true;
+  }
   if (!stored.installDate) {
     toSet.installDate = Date.now();
   }
@@ -298,12 +319,21 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
 // Run maintenance check on worker initialization
 pruneChapterCache().catch(() => {});
-chrome.storage?.local?.get(['studyResource', 'installDate'], (res) => {
+chrome.storage?.local?.get(['studyResource', 'installDate', 'defaultDomainsSeeded', 'disabledDomains'], (res) => {
+  const patch = {};
   if (res?.studyResource === 'gty') {
-    chrome.storage.local.set({ studyResource: 'thesingingbible' });
+    patch.studyResource = 'thesingingbible';
   }
   if (!res?.installDate) {
-    chrome.storage.local.set({ installDate: Date.now() });
+    patch.installDate = Date.now();
+  }
+  if (!res?.defaultDomainsSeeded) {
+    const existing = Array.isArray(res?.disabledDomains) ? res.disabledDomains : [];
+    patch.disabledDomains = Array.from(new Set([...existing, ...DEFAULT_DISABLED_DOMAINS]));
+    patch.defaultDomainsSeeded = true;
+  }
+  if (Object.keys(patch).length > 0) {
+    chrome.storage.local.set(patch);
   }
 });
 

@@ -90,10 +90,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  const DEFAULT_DISABLED_DOMAINS = [
+    'docs.google.com',
+    'sheets.google.com',
+    'slides.google.com',
+    'drive.google.com',
+    'github.com',
+    'gitlab.com',
+    'vscode.dev',
+    'codepen.io',
+    'codesandbox.io',
+    'figma.com',
+    'canva.com'
+  ];
+
   // 2. Load Stored Configuration
   const stored = await new Promise(resolve => {
     chrome.storage.local.get([
       'enabled',
+      'scanMode',
       'theme',
       'fontSize',
       'scriptureFont',
@@ -110,12 +125,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       'preferredCommentary',
       'studyResource',
       'multiPillResources',
-      'disabledDomains'
+      'disabledDomains',
+      'defaultDomainsSeeded'
     ], resolve);
   });
 
   const config = {
     enabled: stored.enabled !== false,
+    scanMode: stored.scanMode || 'auto',
     theme: stored.theme || 'auto',
     fontSize: stored.fontSize || 'medium',
     scriptureFont: stored.scriptureFont || 'sans',
@@ -136,7 +153,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     multiPillResources: Array.isArray(stored.multiPillResources)
       ? stored.multiPillResources
       : ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube'],
-    disabledDomains: Array.isArray(stored.disabledDomains) ? stored.disabledDomains : []
+    disabledDomains: Array.isArray(stored.disabledDomains)
+      ? (stored.defaultDomainsSeeded ? stored.disabledDomains : Array.from(new Set([...stored.disabledDomains, ...DEFAULT_DISABLED_DOMAINS])))
+      : [...DEFAULT_DISABLED_DOMAINS]
   };
 
   // Helper to persist changes
@@ -169,6 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const underlineColor = document.getElementById('underlineColor');
   const hoverDelay = document.getElementById('hoverDelay');
   const hoverDelayVal = document.getElementById('hoverDelayVal');
+  const scanMode = document.getElementById('scanMode');
   const minimalistMode = document.getElementById('minimalistMode');
   const previewCard = document.getElementById('previewCard');
   const sampleAnchor = document.getElementById('sampleAnchor');
@@ -183,6 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     hoverDelay.value = config.hoverDelay;
     hoverDelayVal.textContent = `${config.hoverDelay}ms`;
   }
+  if (scanMode) scanMode.value = config.scanMode;
   if (minimalistMode) minimalistMode.checked = config.minimalistMode;
 
   function updateLivePreview() {
@@ -265,6 +286,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   hoverDelay?.addEventListener('input', () => {
     hoverDelayVal.textContent = `${hoverDelay.value}ms`;
     saveConfig({ hoverDelay: parseInt(hoverDelay.value, 10) });
+  });
+
+  scanMode?.addEventListener('change', () => {
+    saveConfig({ scanMode: scanMode.value });
   });
 
   minimalistMode?.addEventListener('change', () => {
@@ -549,6 +574,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 8. Tab 5: Disabled Sites Manager
   const addDomainInput = document.getElementById('addDomainInput');
   const addDomainBtn = document.getElementById('addDomainBtn');
+  const restoreDefaultDomainsBtn = document.getElementById('restoreDefaultDomainsBtn');
   const disabledSitesList = document.getElementById('disabledSitesList');
 
   function renderDisabledSites() {
@@ -573,7 +599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
       item.querySelector('button').addEventListener('click', () => {
         const nextList = config.disabledDomains.filter(d => d !== domain);
-        saveConfig({ disabledDomains: nextList });
+        saveConfig({ disabledDomains: nextList, defaultDomainsSeeded: true });
         renderDisabledSites();
       });
       disabledSitesList.appendChild(item);
@@ -586,7 +612,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     val = val.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     if (val && !config.disabledDomains.includes(val)) {
       const nextList = [...config.disabledDomains, val];
-      saveConfig({ disabledDomains: nextList });
+      saveConfig({ disabledDomains: nextList, defaultDomainsSeeded: true });
       addDomainInput.value = '';
       renderDisabledSites();
     }
@@ -595,6 +621,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   addDomainBtn?.addEventListener('click', handleAddDomain);
   addDomainInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleAddDomain();
+  });
+  restoreDefaultDomainsBtn?.addEventListener('click', () => {
+    const nextList = Array.from(new Set([...config.disabledDomains, ...DEFAULT_DISABLED_DOMAINS]));
+    saveConfig({ disabledDomains: nextList, defaultDomainsSeeded: true });
+    renderDisabledSites();
   });
 
   // 9. Tab 6: Scripture Sandbox & Tester

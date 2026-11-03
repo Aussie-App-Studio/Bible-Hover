@@ -18,6 +18,7 @@
   // Configuration state
   let config = {
     enabled: true,
+    scanMode: 'auto', // 'auto' | 'selection'
     defaultTranslation: 'BSB',
     detectInlineTranslations: true,
     studyResource: 'biblehub', // 'biblehub' | 'thesingingbible' | 'bible_com' | 'youversion' | 'desiringgod' | 'youtube'
@@ -31,7 +32,19 @@
     fontSize: 'medium',
     scriptureFont: 'sans',
     hoverDelay: 120,
-    disabledDomains: [],
+    disabledDomains: [
+      'docs.google.com',
+      'sheets.google.com',
+      'slides.google.com',
+      'drive.google.com',
+      'github.com',
+      'gitlab.com',
+      'vscode.dev',
+      'codepen.io',
+      'codesandbox.io',
+      'figma.com',
+      'canva.com'
+    ],
     commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
     preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
     multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube']
@@ -41,7 +54,6 @@
   let isSiteDisabled = false;
   let detectedRefCount = 0;
   let observer = null;
-  const taggedElements = new Set();
 
   // Tooltip controller variables
   let hostEl = null;
@@ -66,8 +78,63 @@
   // Tags and classes to completely ignore during DOM scanning
   const IGNORE_TAGS = new Set([
     'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT', 'SELECT',
-    'CODE', 'PRE', 'BUTTON', 'SVG', 'CANVAS', 'IFRAME', 'VIDEO', 'AUDIO'
+    'CODE', 'PRE', 'KBD', 'SAMP', 'VAR', 'OUTPUT', 'BUTTON',
+    'SVG', 'svg', 'MATH', 'math', 'CANVAS', 'IFRAME', 'VIDEO', 'AUDIO'
   ]);
+
+  // Classes for rich-text editors, code editors, and internal UI to skip entire subtrees
+  const IGNORE_CLASSES = new Set([
+    // Bible Hover internal classes
+    'bh-ref', 'bh-preview-card', 'w-preview-box', 'no-bh-scan',
+    // Monaco Editor (VS Code Web, GitHub, Cloud Consoles)
+    'monaco-editor', 'monaco-diff-editor', 'monaco-mouse-cursor-text', 'view-lines', 'view-line',
+    // CodeMirror (v5 & v6)
+    'CodeMirror', 'cm-editor', 'cm-content', 'cm-scroller', 'cm-line',
+    // Ace Editor
+    'ace_editor', 'ace_content', 'ace_text-layer',
+    // Google Docs / Sheets / Workspace
+    'kix-appview-editor', 'kix-canvas-tile-content', 'kix-page', 'kix-paginateddocumentplugin',
+    'docs-editor', 'docs-editor-container', 'waffle-grid-container',
+    // Quill & Draft.js
+    'ql-editor', 'ql-container', 'DraftEditor-root', 'DraftEditor-editorContainer', 'public-DraftEditor-content',
+    // ProseMirror, Tiptap, CKEditor, TinyMCE, Froala
+    'ProseMirror', 'ck-editor', 'ck-content', 'mce-content-body', 'tox-edit-area', 'fr-element', 'fr-wrapper',
+    // Code blocks & repository diff viewers (GitHub, GitLab, Prism, Highlight.js)
+    'blob-code', 'blob-code-inner', 'react-code-text', 'react-code-lines', 'diff-table', 'hljs'
+  ]);
+
+  function shouldIgnoreElement(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+    if (IGNORE_TAGS.has(el.nodeName)) return true;
+    if (el.isContentEditable) return true;
+    if (el.id === 'bible-hover-root' || el.id === 'welcomePreviewCard') return true;
+
+    const cl = el.classList;
+    if (cl && cl.length > 0) {
+      for (let i = 0; i < cl.length; i++) {
+        if (IGNORE_CLASSES.has(cl[i])) return true;
+      }
+    }
+
+    if (typeof el.getAttribute === 'function') {
+      const ce = el.getAttribute('contenteditable');
+      if (ce === 'true' || ce === '' || ce === 'plaintext-only') return true;
+      const role = el.getAttribute('role');
+      if (role === 'textbox' || role === 'code') return true;
+      if (el.hasAttribute('data-slate-editor') || el.hasAttribute('data-lexical-editor')) return true;
+    }
+
+    return false;
+  }
+
+  function hasIgnoredAncestor(el) {
+    let cur = el;
+    while (cur && cur !== document.body && cur !== document.documentElement) {
+      if (shouldIgnoreElement(cur)) return true;
+      cur = cur.parentElement;
+    }
+    return false;
+  }
 
   // Check if current hostname is disabled in settings
   function checkSiteDisabled(disabledDomains) {
@@ -2566,10 +2633,60 @@
     `;
   }
 
+  // --- Event Delegation for Tagged Verses ---
+  let delegatedBody = null;
+  function setupHoverDelegation() {
+    if (!document.body || delegatedBody === document.body) return;
+    delegatedBody = document.body;
+
+    document.body.addEventListener('mouseover', (e) => {
+      if (!config.enabled || isSiteDisabled) return;
+      const target = e.target;
+      if (!target || typeof target.closest !== 'function') return;
+      const span = target.classList?.contains('bh-ref') ? target : target.closest('.bh-ref');
+      if (!span) return;
+      if (e.relatedTarget && span.contains(e.relatedTarget)) return;
+
+      let parsed = span._bhParsedRef;
+      if (!parsed && span.dataset.bhRef) {
+        try {
+          parsed = JSON.parse(span.dataset.bhRef);
+          span._bhParsedRef = parsed;
+        } catch {
+          return;
+        }
+      }
+      if (!parsed) return;
+
+      isMouseOverTarget = true;
+      clearTimeout(hideTimer);
+      clearTimeout(showTimer);
+      showTimer = setTimeout(() => {
+        showTooltipFor(span, parsed);
+      }, config.hoverDelay);
+    });
+
+    document.body.addEventListener('mouseout', (e) => {
+      const target = e.target;
+      if (!target || typeof target.closest !== 'function') return;
+      const span = target.classList?.contains('bh-ref') ? target : target.closest('.bh-ref');
+      if (!span) return;
+      if (e.relatedTarget && span.contains(e.relatedTarget)) return;
+
+      isMouseOverTarget = false;
+      clearTimeout(showTimer);
+      scheduleHideTooltip();
+    });
+  }
+
+  // Fast pre-filter: requires at least 2 letters + optional period + whitespace + 1-3 digit chapter/verse number.
+  // Preserves whole chapters ("Romans 6", "Gal 3") while skipping prices, timestamps, 4-digit years, and bare numbers.
+  const QUICK_REF_PREFILTER_REGEX = /\p{L}{2}\.?\s+\d{1,3}(?!\d)/u;
+
   // --- Safe DOM Text Node Tagging ---
   function tagTextNode(textNode) {
     const text = textNode.nodeValue;
-    if (!text || text.length < 4 || !/\d/.test(text)) return;
+    if (!text || text.length < 4 || !QUICK_REF_PREFILTER_REGEX.test(text)) return;
 
     const matches = findReferencesInText(text);
     if (matches.length === 0) return;
@@ -2587,30 +2704,14 @@
         frag.appendChild(document.createTextNode(text.substring(lastIdx, m.startIndex)));
       }
 
-      // Create tagged span
+      // Create tagged span (hover events handled via delegation on document.body)
       const span = document.createElement('span');
       span.className = 'bh-ref';
       span.textContent = text.substring(m.startIndex, m.endIndex);
       span.dataset.bhRef = JSON.stringify(m.parsed);
-
-      // Event handlers
-      span.addEventListener('mouseenter', () => {
-        isMouseOverTarget = true;
-        clearTimeout(hideTimer);
-        clearTimeout(showTimer);
-        showTimer = setTimeout(() => {
-          showTooltipFor(span, m.parsed);
-        }, config.hoverDelay);
-      });
-
-      span.addEventListener('mouseleave', () => {
-        isMouseOverTarget = false;
-        clearTimeout(showTimer);
-        scheduleHideTooltip();
-      });
+      span._bhParsedRef = m.parsed;
 
       frag.appendChild(span);
-      taggedElements.add(span);
       detectedRefCount++;
       lastIdx = m.endIndex;
     }
@@ -2623,25 +2724,27 @@
     parent.replaceChild(frag, textNode);
   }
 
-  // Efficient TreeWalker over element subtrees
-  function scanElement(rootElement) {
+  // Efficient TreeWalker over element subtrees (prunes ignored branches via FILTER_REJECT)
+  function scanElement(rootElement, skipBadgeUpdate = false) {
     if (!rootElement || !config.enabled || isSiteDisabled) return;
+    if (rootElement.nodeType === Node.ELEMENT_NODE && hasIgnoredAncestor(rootElement)) return;
+
+    setupHoverDelegation();
 
     const walker = document.createTreeWalker(
       rootElement,
-      NodeFilter.SHOW_TEXT,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          const parent = node.parentNode;
-          if (!parent) return NodeFilter.FILTER_REJECT;
-          if (IGNORE_TAGS.has(parent.nodeName)) return NodeFilter.FILTER_REJECT;
-          if (parent.closest && parent.closest('.bh-ref, #bible-hover-root, .bh-preview-card, #welcomePreviewCard, .w-preview-box, .no-bh-scan')) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            return shouldIgnoreElement(node)
+              ? NodeFilter.FILTER_REJECT
+              : NodeFilter.FILTER_SKIP;
+          }
+          const text = node.nodeValue;
+          if (!text || text.length < 4 || !QUICK_REF_PREFILTER_REGEX.test(text)) {
             return NodeFilter.FILTER_REJECT;
           }
-          if (parent.classList && (parent.classList.contains('bh-ref') || parent.id === 'bible-hover-root')) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (parent.isContentEditable) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
       }
@@ -2657,7 +2760,7 @@
     }
 
     // Update extension badge with detected count
-    if (detectedRefCount > 0) {
+    if (!skipBadgeUpdate && detectedRefCount > 0) {
       safeSendMessage({
         type: 'SET_BADGE_COUNT',
         count: detectedRefCount
@@ -2665,32 +2768,85 @@
     }
   }
 
-  // MutationObserver for SPAs / dynamic content
+  // Idle task scheduler with fallback for browsers without requestIdleCallback
+  const scheduleIdleTask = typeof window.requestIdleCallback === 'function'
+    ? (cb) => window.requestIdleCallback(cb, { timeout: 500 })
+    : (cb) => window.setTimeout(() => {
+        const start = performance.now();
+        cb({
+          didTimeout: false,
+          timeRemaining: () => Math.max(0, 12 - (performance.now() - start))
+        });
+      }, 50);
+
+  // MutationObserver for SPAs / dynamic content with requestIdleCallback & time-sliced chunking
   function setupMutationObserver() {
     if (observer) observer.disconnect();
 
-    let timeoutId = null;
+    let debounceTimerId = null;
+    let idleCallbackId = null;
     const pendingNodes = new Set();
+
+    function processPendingSlice(deadline) {
+      idleCallbackId = null;
+      if (!config.enabled || isSiteDisabled) {
+        pendingNodes.clear();
+        return;
+      }
+
+      const sliceStart = performance.now();
+      const prevCount = detectedRefCount;
+      const iterator = pendingNodes.values();
+      let step = iterator.next();
+
+      while (!step.done) {
+        const el = step.value;
+        pendingNodes.delete(el);
+
+        if (el.isConnected) {
+          scanElement(el, true);
+        }
+
+        step = iterator.next();
+
+        // Yield to main thread if idle deadline is reached or slice exceeds 10ms
+        if (
+          !step.done &&
+          ((deadline && typeof deadline.timeRemaining === 'function' && deadline.timeRemaining() <= 1) ||
+            (performance.now() - sliceStart > 10))
+        ) {
+          break;
+        }
+      }
+
+      if (detectedRefCount > prevCount) {
+        safeSendMessage({
+          type: 'SET_BADGE_COUNT',
+          count: detectedRefCount
+        });
+      }
+
+      if (pendingNodes.size > 0 && !idleCallbackId) {
+        idleCallbackId = scheduleIdleTask(processPendingSlice);
+      }
+    }
 
     observer = new MutationObserver((mutations) => {
       for (const m of mutations) {
         for (const added of m.addedNodes) {
-          if (added.nodeType === Node.ELEMENT_NODE) {
-            if (added.id !== 'bible-hover-root' && !added.classList?.contains('bh-ref')) {
-              pendingNodes.add(added);
-            }
+          if (added.nodeType === Node.ELEMENT_NODE && !shouldIgnoreElement(added)) {
+            pendingNodes.add(added);
           }
         }
       }
 
-      if (pendingNodes.size > 0 && !timeoutId) {
-        timeoutId = setTimeout(() => {
-          for (const el of pendingNodes) {
-            scanElement(el);
+      if (pendingNodes.size > 0 && !debounceTimerId && !idleCallbackId) {
+        debounceTimerId = setTimeout(() => {
+          debounceTimerId = null;
+          if (!idleCallbackId && pendingNodes.size > 0) {
+            idleCallbackId = scheduleIdleTask(processPendingSlice);
           }
-          pendingNodes.clear();
-          timeoutId = null;
-        }, 150);
+        }, 120);
       }
     });
 
@@ -2698,6 +2854,69 @@
       childList: true,
       subtree: true
     });
+  }
+
+  // On-Selection / On-Demand lookup mode (0% background scanning overhead)
+  let selectionListenerAttached = false;
+  function setupSelectionLookup() {
+    if (selectionListenerAttached) return;
+    selectionListenerAttached = true;
+
+    let selectionTimer = null;
+    const handleSelectionCheck = (e) => {
+      if (!config.enabled || isSiteDisabled || config.scanMode !== 'selection') return;
+      if (hostEl && (e.target === hostEl || hostEl.contains(e.target))) return;
+
+      clearTimeout(selectionTimer);
+      selectionTimer = setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+          if (!isMouseOverTooltip) {
+            hideTooltip(true);
+          }
+          return;
+        }
+
+        const text = sel.toString().trim();
+        if (!text || text.length < 4 || text.length > 160) return;
+
+        const matches = findReferencesInText(text);
+        if (matches.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return;
+
+        const virtualTarget = {
+          getBoundingClientRect: () => range.getBoundingClientRect()
+        };
+        showTooltipFor(virtualTarget, matches[0].parsed);
+      }, 20);
+    };
+
+    document.addEventListener('mouseup', handleSelectionCheck, { passive: true });
+    document.addEventListener('keyup', (e) => {
+      if (e.key && (e.key.startsWith('Arrow') || e.key === 'Shift')) {
+        handleSelectionCheck(e);
+      }
+    }, { passive: true });
+  }
+
+  function applyScanningMode() {
+    if (!config.enabled || isSiteDisabled) {
+      hideTooltip(true);
+      if (observer) observer.disconnect();
+      return;
+    }
+
+    setupSelectionLookup();
+
+    if (config.scanMode === 'selection') {
+      if (observer) observer.disconnect();
+    } else {
+      scanElement(document.body);
+      setupMutationObserver();
+    }
   }
 
   // Close tooltip on Esc key or resize/scroll outside
@@ -2739,12 +2958,10 @@
 
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', () => {
-            scanElement(document.body);
-            setupMutationObserver();
+            applyScanningMode();
           });
         } else {
-          scanElement(document.body);
-          setupMutationObserver();
+          applyScanningMode();
         }
       });
     }
@@ -2794,14 +3011,8 @@
           updateSettingsButtonVisibility();
         }
 
-        if (changes.enabled || changes.disabledDomains) {
-          if (!config.enabled || isSiteDisabled) {
-            hideTooltip(true);
-            if (observer) observer.disconnect();
-          } else {
-            scanElement(document.body);
-            setupMutationObserver();
-          }
+        if (changes.enabled || changes.disabledDomains || changes.scanMode) {
+          applyScanningMode();
         }
       });
     }

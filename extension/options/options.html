@@ -113,7 +113,7 @@
             <span class="stat-dot green"></span>
             <span>100% Offline Capable</span>
           </div>
-          <span class="version-text">v1.0.5</span>
+          <span class="version-text">v1.0.6</span>
         </div>
       </aside>
 
@@ -213,6 +213,17 @@
                   <input type="range" id="hoverDelay" min="50" max="600" step="25" value="120" class="dash-range">
                   <span id="hoverDelayVal" class="range-badge">120ms</span>
                 </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-label-group">
+                  <label for="scanMode">Scanning Mode</label>
+                  <span class="form-desc">Automatic highlights references on page load; On-Selection only looks up scripture when text is highlighted (0% background overhead)</span>
+                </div>
+                <select id="scanMode" class="dash-select">
+                  <option value="auto">Automatic (Default)</option>
+                  <option value="selection">On-Selection / On-Demand</option>
+                </select>
               </div>
 
               <div class="form-row toggle-row">
@@ -660,7 +671,13 @@
           </div>
 
           <div class="settings-card" style="margin-top:20px;">
-            <h3 class="card-title">Currently Disabled Websites</h3>
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Currently Disabled Websites</h3>
+                <p class="card-desc">High-overhead productivity &amp; code apps (like Google Docs, Sheets, and GitHub) are excluded by default. Remove any domain below if you want Bible Hover active there.</p>
+              </div>
+              <button type="button" id="restoreDefaultDomainsBtn" class="dash-mini-btn" title="Restore default productivity & code exclusions">Restore Defaults</button>
+            </div>
             <div id="disabledSitesList" class="disabled-sites-list">
               <!-- Dynamically populated -->
             </div>

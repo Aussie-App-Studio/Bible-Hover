@@ -764,6 +764,9 @@
   const DASH_PART = `(?:${DASH_CHAR}|\\s+(?:to|through)\\s+)`;
   const COLON_PART = `(?:[:.：··\\uFE55]\\s*(?:vv?\\.?|verses?)?|\\s*\\b(?:vv?\\.?|verses?)\\s*|\\s*,\\s*(?=\\d))`;
 
+  const DASH_PART_REGEX = new RegExp(DASH_PART, 'gi');
+  const COLON_PART_REGEX = new RegExp(COLON_PART, 'gi');
+
   // Master regex to detect primary Scripture references in text
   // Groups:
   // 1: Book name/abbreviation (with optional trailing period)
@@ -773,6 +776,9 @@
     `(?<![\\p{L}\\p{N}_])((?:${escapedAliases.join('|')})\\.?)(?:\\s+)(\\d{1,3}(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?(?:\\s*(?:${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?|ff\\b))?(?:\\s*,\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?)?)*|\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
     'giu'
   );
+
+  // Pre-compiled non-global regex to check if chained text starts a brand new Book reference
+  const PROBE_BOOK_REGEX = new RegExp(MASTER_REF_REGEX.source, 'i');
 
   // Chained continuation regex right after a matched reference: e.g. "; 14:6" or ", 18-20"
   const CHAIN_CONTINUATION_REGEX = new RegExp(
@@ -787,8 +793,8 @@
     if (!specStr) return '';
     let s = specStr
       .replace(/[\u200B\u200C\u200D\uFEFF]/g, '')
-      .replace(new RegExp(DASH_PART, 'gi'), '-')
-      .replace(new RegExp(COLON_PART, 'gi'), ':')
+      .replace(DASH_PART_REGEX, '-')
+      .replace(COLON_PART_REGEX, ':')
       .replace(/:\s*:\s*/g, ':')
       .replace(/\s*([:,-])\s*/g, '$1')
       .trim();
@@ -939,12 +945,17 @@
     return `${book.name} ${parts.join('; ')}`;
   }
 
+  // Fast bailout regex: requires at least 2 letters + optional period + whitespace + 1-3 digit number (not 4+ digit year).
+  // Preserves 100% of whole-chapter references (e.g., "Romans 6", "Gal 3", "Gal. 3", "Psalm 23") while skipping
+  // timestamps ("10:30"), prices ("$19.99"), years ("May 2026"), line numbers ("123"), and percentages ("100%").
+  const QUICK_REF_PREFILTER_REGEX = /\p{L}{2}\.?\s+\d{1,3}(?!\d)/u;
+
   /**
    * Scans a plain text string and returns an array of validated reference matches:
    * [{ startIndex, endIndex, matchText, parsed }]
    */
   function findReferencesInText(text) {
-    if (!text || text.length < 4 || !/\d/.test(text)) return [];
+    if (!text || text.length < 4 || !QUICK_REF_PREFILTER_REGEX.test(text)) return [];
 
     const results = [];
     MASTER_REF_REGEX.lastIndex = 0;
@@ -990,8 +1001,7 @@
         // If the text immediately after the prefix starts a brand new Book reference (e.g. ", 1 Cor 13:4"),
         // break out of chaining so MASTER_REF_REGEX matches the new book!
         const afterPrefix = remaining.slice(prefix.length);
-        const probeBookRegex = new RegExp(MASTER_REF_REGEX.source, 'i');
-        const newBookMatch = probeBookRegex.exec(afterPrefix);
+        const newBookMatch = PROBE_BOOK_REGEX.exec(afterPrefix);
         if (newBookMatch && newBookMatch.index === 0) {
           break;
         }
