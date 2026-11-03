@@ -2635,6 +2635,9 @@
           const parent = node.parentNode;
           if (!parent) return NodeFilter.FILTER_REJECT;
           if (IGNORE_TAGS.has(parent.nodeName)) return NodeFilter.FILTER_REJECT;
+          if (parent.closest && parent.closest('.bh-ref, #bible-hover-root, .bh-preview-card, #welcomePreviewCard, .w-preview-box, .no-bh-scan')) {
+            return NodeFilter.FILTER_REJECT;
+          }
           if (parent.classList && (parent.classList.contains('bh-ref') || parent.id === 'bible-hover-root')) {
             return NodeFilter.FILTER_REJECT;
           }

@@ -186,6 +186,226 @@
       </div>
     </section>
 
+    <!-- TRANSLATIONS & 0MS SPEED SECTION -->
+    <section class="w-translations-section" id="translationsSection">
+      <div class="w-section-header">
+        <div>
+          <div class="w-hero-pill" style="margin-bottom: 6px;">
+            <span>⚡</span>
+            <span>Speed, Transparency &amp; Customization</span>
+          </div>
+          <h2 style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em;">Why the Berean Standard Bible (BSB) is the Default</h2>
+          <p style="font-size: 13.5px; color: var(--w-text-muted); margin-top: 2px;">
+            Instant 0ms scripture popups with zero copyright restrictions—plus how to easily change your default and download any translation for offline 0ms speed.
+          </p>
+        </div>
+      </div>
+
+      <!-- 3-Column Elegant Explainer Cards Grid -->
+      <div class="w-trans-explainer-grid">
+        <!-- Card 1: Copyright Freedom -->
+        <div class="w-trans-explainer-card copyright">
+          <div class="w-trans-card-header">
+            <div class="w-trans-card-icon">🏛️</div>
+            <span class="w-trans-card-tag">Copyright Freedom</span>
+          </div>
+          <h3 class="w-trans-card-title">Commercial Copyright vs Public Domain</h3>
+          <p class="w-trans-card-body">
+            Beloved modern translations like the <strong>ESV</strong> (Crossway), <strong>NIV</strong> (Biblica), and <strong>NASB</strong> (Lockman) are subject to strict commercial copyrights. Bundling their full text pre-packaged inside a free extension binary without licensing agreements is legally restricted.
+          </p>
+          <div class="w-trans-card-highlight">
+            The <strong>Berean Standard Bible (BSB)</strong> is graciously dedicated to the <em>public domain</em> (Berean.Bible), allowing Bible Hover to bundle all 66 books directly into the extension 100% legally, forever free, and royalty-free.
+          </div>
+        </div>
+
+        <!-- Card 2: 0ms Popups -->
+        <div class="w-trans-explainer-card speed">
+          <div class="w-trans-card-header">
+            <div class="w-trans-card-icon">⚡</div>
+            <span class="w-trans-card-tag">Zero Server Latency</span>
+          </div>
+          <h3 class="w-trans-card-title">Pre-Bundled for Instant 0ms Popups</h3>
+          <p class="w-trans-card-body">
+            Because the complete BSB is stored directly on your computer inside the extension, hovering over any scripture reference displays verses in <strong>0 milliseconds</strong>.
+          </p>
+          <div class="w-trans-card-highlight">
+            There is zero waiting for external web servers or APIs, no loading spinners or bandwidth delay, and complete reading privacy with no network tracking.
+          </div>
+        </div>
+
+        <!-- Card 3: Download & Change Default -->
+        <div class="w-trans-explainer-card download">
+          <div class="w-trans-card-header">
+            <div class="w-trans-card-icon">📥</div>
+            <span class="w-trans-card-tag">Your Choice</span>
+          </div>
+          <h3 class="w-trans-card-title">Download Any Translation for 0ms Popups</h3>
+          <p class="w-trans-card-body">
+            You are <strong>never locked into the BSB</strong>. You can easily set any translation as your default below, or download complete 66-book translations (such as <strong>ESV</strong>, <strong>NASB</strong>, <strong>KJV</strong>, <strong>NLT</strong>, or <strong>CSB</strong>) directly to your browser's private local storage.
+          </p>
+          <div class="w-trans-card-highlight">
+            Once downloaded, they pop up in <strong>0ms offline</strong> too! For versions like the <strong>NIV</strong>, passages stream on-demand and chapters are automatically cached for repeat visits.
+          </div>
+        </div>
+      </div>
+
+      <!-- Unified Interactive Controls Box -->
+      <div class="w-trans-controls-card">
+        <!-- Control Part 1: Default Translation Selector -->
+        <div class="w-trans-control-group">
+          <div class="w-control-group-header">
+            <div>
+              <label for="welcomeDefaultTranslation" class="w-control-group-title">1. Set Your Preferred Default Translation</label>
+              <div class="w-control-group-desc">The primary translation shown when hovering over references (e.g. <em>Romans 6:1-7</em> or <em>John 3:16</em>).</div>
+            </div>
+            <div id="welcomeTransStatusBadge" class="w-status-badge bundled">
+              <span>⚡ Pre-Bundled Offline (0ms)</span>
+            </div>
+          </div>
+
+          <div class="w-default-trans-row">
+            <select id="welcomeDefaultTranslation" class="w-select w-trans-select">
+              <optgroup label="English Translations">
+                <option value="BSB">BSB — Berean Standard Bible (⚡ Pre-Bundled 0ms)</option>
+                <option value="ESV">ESV — English Standard Version</option>
+                <option value="NIV">NIV — New International Version</option>
+                <option value="NASB">NASB — New American Standard Bible</option>
+                <option value="KJV">KJV — King James Version</option>
+                <option value="NLT">NLT — New Living Translation</option>
+                <option value="CSB">CSB — Christian Standard Bible</option>
+                <option value="NKJV">NKJV — New King James Version</option>
+                <option value="WEB">WEB — World English Bible</option>
+              </optgroup>
+              <optgroup label="🇺🇦 Ukrainian">
+                <option value="TUR">TUR — Р. Турконяка (УБТ 2011)</option>
+                <option value="UBIO">UBIO — Іван Огієнко (1962)</option>
+              </optgroup>
+              <optgroup label="🇪🇸 Spanish">
+                <option value="LBLA">LBLA — La Biblia de las Américas</option>
+                <option value="RV1960">RV1960 — Reina-Valera 1960</option>
+              </optgroup>
+              <optgroup label="🇵🇹 Portuguese">
+                <option value="NAA">NAA — Nova Almeida Atualizada</option>
+                <option value="ARA">ARA — Almeida Revista e Atualizada</option>
+              </optgroup>
+              <optgroup label="🇩🇪 German">
+                <option value="SCH2000">SCH2000 — Schlachter 2000</option>
+              </optgroup>
+              <optgroup label="🇨🇳 Chinese">
+                <option value="CUNPS">CUNPS — 和合本 简体</option>
+                <option value="CUNP">CUNP — 和合本 繁體</option>
+              </optgroup>
+              <optgroup label="🇰🇷 Korean">
+                <option value="KRV">KRV — 개역한글</option>
+              </optgroup>
+              <optgroup label="🇮🇳 Hindi">
+                <option value="HIOV">HIOV — हिंदी O.V.</option>
+              </optgroup>
+              <optgroup label="🇷🇺 Russian">
+                <option value="SYNOD">SYNOD — Синодальный перевод</option>
+                <option value="NRT">NRT — Новый русский перевод</option>
+              </optgroup>
+            </select>
+            <div id="welcomeTransNote" class="w-trans-inline-note">
+              ✓ Ready for 0ms instant popups
+            </div>
+          </div>
+        </div>
+
+        <!-- Control Part 2: 1-Click Offline Translation Downloader -->
+        <div class="w-trans-control-group">
+          <div class="w-control-group-header">
+            <div>
+              <div class="w-control-group-title">2. Download Translations for 0ms Offline Access (~3–4 MB each)</div>
+              <div class="w-control-group-desc">Store complete 66-book Bibles on your device (IndexedDB storage) so they pop up in 0ms with zero network requests.</div>
+            </div>
+          </div>
+
+          <div class="w-download-row">
+            <select id="welcomeDownloadSelect" class="w-select" style="flex: 1; min-width: 220px;">
+              <optgroup label="English Translations (Full 66 Books)">
+                <option value="ESV">ESV — English Standard Version (~4.0 MB)</option>
+                <option value="NASB">NASB — New American Standard (~4.1 MB)</option>
+                <option value="KJV">KJV — King James Version (~4.2 MB)</option>
+                <option value="NLT">NLT — New Living Translation (~3.9 MB)</option>
+                <option value="CSB">CSB — Christian Standard Bible (~4.0 MB)</option>
+                <option value="NKJV">NKJV — New King James Version (~4.1 MB)</option>
+                <option value="WEB">WEB — World English Bible (~3.8 MB)</option>
+              </optgroup>
+              <optgroup label="International Translations (Full 66 Books)">
+                <option value="TUR">TUR — Ukrainian (Р. Турконяка, ~4.3 MB)</option>
+                <option value="UBIO">UBIO — Ukrainian (Іван Огієнко, ~4.4 MB)</option>
+                <option value="LBLA">LBLA — Spanish (La Biblia de las Américas, ~4.2 MB)</option>
+                <option value="RV1960">RV1960 — Spanish (Reina-Valera 1960, ~4.1 MB)</option>
+                <option value="NAA">NAA — Portuguese (Nova Almeida Atualizada, ~4.1 MB)</option>
+                <option value="ARA">ARA — Portuguese (Almeida Revista, ~4.0 MB)</option>
+                <option value="SCH2000">SCH2000 — German (Schlachter 2000, ~4.3 MB)</option>
+                <option value="CUNPS">CUNPS — Chinese Simplified (和合本 简体, ~3.2 MB)</option>
+                <option value="CUNP">CUNP — Chinese Traditional (和合本 繁體, ~3.2 MB)</option>
+                <option value="KRV">KRV — Korean (개역한글, ~3.4 MB)</option>
+                <option value="HIOV">HIOV — Hindi (हिंदी O.V., ~4.5 MB)</option>
+                <option value="SYNOD">SYNOD — Russian (Синодальный, ~4.6 MB)</option>
+                <option value="NRT">NRT — Russian (Новый русский перевод, ~4.4 MB)</option>
+              </optgroup>
+            </select>
+
+            <button type="button" id="welcomeDownloadBtn" class="w-download-btn primary">
+              <span id="welcomeDownloadBtnIcon">📥</span>
+              <span id="welcomeDownloadBtnText">Download for 0ms Offline</span>
+            </button>
+          </div>
+
+          <!-- Download Progress Banner -->
+          <div id="welcomeDownloadFeedback" class="w-download-feedback" style="display:none;"></div>
+
+          <!-- Stored Bibles List -->
+          <div class="w-stored-bibles-wrap">
+            <span class="w-stored-label">Active 0ms Offline Bibles on your computer:</span>
+            <div id="welcomeOfflineBiblesList" class="w-stored-bibles-list">
+              <span class="w-offline-pill bundled" title="Pre-bundled with Bible Hover">
+                <span>⚡ BSB</span>
+                <span class="pill-meta">Berean Standard (Bundled)</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control Part 3: Choose Which Translations Appear in the Hover Popup Bar -->
+        <div class="w-trans-control-group no-border">
+          <div class="w-control-group-header">
+            <div>
+              <div class="w-control-group-title">3. Choose Which Translations Appear in Your Hover Popup Bar</div>
+              <div class="w-control-group-desc">Select which translation tabs show up at the top of your hover cards for 1-click switching. Keep it minimal with only 1 or 2 favorites (e.g. only ESV, or BSB + NIV), or keep all of them.</div>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="w-trans-presets-row">
+            <span class="w-presets-label">Quick Presets:</span>
+            <button type="button" id="btnPresetTop4" class="w-pill-action-btn">Top 4 (BSB, ESV, NIV, NASB)</button>
+            <button type="button" id="btnPresetCore" class="w-pill-action-btn">All English</button>
+            <button type="button" id="btnPresetOnlyDefault" class="w-pill-action-btn">Only My Default</button>
+            <button type="button" id="btnPresetAll" class="w-pill-action-btn">Select All</button>
+            <button type="button" id="btnToggleIntl" class="w-pill-action-btn secondary">🌐 International Bibles (+13)</button>
+          </div>
+
+          <!-- Translation Checkboxes Grid -->
+          <div id="welcomeTransPillsGrid" class="w-trans-pills-grid">
+            <!-- Dynamically populated English translations -->
+          </div>
+
+          <div id="welcomeIntlTransPillsGrid" class="w-trans-pills-grid" style="display:none; margin-top:12px;">
+            <!-- Dynamically populated international bibles -->
+          </div>
+
+          <div class="w-trans-sync-hint">
+            <span>💡</span>
+            <span>Check out the <strong>Real-Time Live Preview</strong> below—the translation pill bar updates instantly as you make selections above!</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- FULL SETTINGS SECTION -->
     <section class="w-settings-section">
       <div class="w-section-header">
@@ -365,17 +585,23 @@
                   <span id="previewTransBadge" class="bh-badge">BSB</span>
                 </div>
                 <div class="bh-actions">
-                  <button type="button" class="bh-icon-btn" title="Copy verse text">
-                    <svg viewBox="0 0 24 24"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  <button type="button" class="bh-icon-btn" id="previewSettingsBtn" title="Settings &amp; Customization">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+                    </svg>
                   </button>
-                  <button type="button" class="bh-icon-btn" title="Settings">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                  <button type="button" class="bh-icon-btn" id="previewCopyBtn" title="Copy verse text">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                    </svg>
                   </button>
                 </div>
               </div>
 
               <!-- Translation Switcher Pill Bar -->
-              <div class="bh-preview-trans-bar">
+              <div class="bh-preview-trans-bar" id="welcomePreviewTransBar">
                 <button type="button" class="bh-trans-pill active" data-trans="BSB">BSB</button>
                 <button type="button" class="bh-trans-pill" data-trans="KJV">KJV</button>
                 <button type="button" class="bh-trans-pill" data-trans="ESV">ESV</button>
@@ -393,6 +619,7 @@
 
               <!-- Commentary & Study Footer -->
               <div class="bh-preview-footer">
+                <div class="bh-footer-left" id="previewFooterTrans">BSB</div>
                 <div class="bh-footer-actions">
                   <span class="bh-link-btn primary" title="View Matthew Henry commentary">
                     <span>📖 Commentary</span>
@@ -452,6 +679,8 @@
     </div>
   </footer>
 
+  <script src="../shared/bible-metadata.js"></script>
   <script src="welcome.js"></script>
+  <script src="../scripts/content.js"></script>
 </body>
 </html>

@@ -1100,3 +1100,551 @@ body {
   border-color: var(--w-accent);
   color: var(--w-accent);
 }
+
+/* ==========================================================================
+   7. Translations & 0ms Speed Section (Why BSB + Downloads & Customization)
+   ========================================================================== */
+.w-translations-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.w-trans-explainer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 760px) {
+  .w-trans-explainer-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.w-trans-explainer-card {
+  background: var(--w-bg-card);
+  border: 1px solid var(--w-border-color);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--w-shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.w-trans-explainer-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--w-shadow-md);
+}
+
+.w-trans-explainer-card.copyright {
+  border-top: 3px solid #6366f1;
+}
+
+.w-trans-explainer-card.speed {
+  border-top: 3px solid #10b981;
+}
+
+.w-trans-explainer-card.download {
+  border-top: 3px solid #3b82f6;
+}
+
+.w-trans-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.w-trans-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: var(--w-bg-card-subtle);
+  border: 1px solid var(--w-border-color);
+  user-select: none;
+}
+
+.w-trans-card-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.w-trans-explainer-card.copyright .w-trans-card-tag {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.w-trans-explainer-card.speed .w-trans-card-tag {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.w-trans-explainer-card.download .w-trans-card-tag {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--w-accent);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.w-trans-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--w-text-main);
+}
+
+.w-trans-card-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--w-text-muted);
+  flex: 1;
+}
+
+.w-trans-card-highlight {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--w-bg-card-subtle);
+  border: 1px solid var(--w-border-color);
+  color: var(--w-text-main);
+}
+
+/* Controls Card */
+.w-trans-controls-card {
+  background: var(--w-bg-card);
+  border: 1px solid var(--w-border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--w-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.w-trans-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--w-border-color);
+}
+
+.w-trans-control-group.no-border {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.w-control-group-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.w-control-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--w-text-main);
+  display: block;
+}
+
+.w-control-group-desc {
+  font-size: 12.5px;
+  color: var(--w-text-muted);
+  margin-top: 2px;
+  max-width: 650px;
+}
+
+/* Dynamic Status Badges */
+.w-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.w-status-badge.bundled {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.w-status-badge.offline {
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: var(--w-accent);
+}
+
+.w-status-badge.online {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+.w-default-trans-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.w-trans-select {
+  flex: 1;
+  min-width: 260px;
+  max-width: 440px;
+}
+
+.w-trans-inline-note {
+  font-size: 12.5px;
+  color: #10b981;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Downloader Row */
+.w-download-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.w-download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.w-download-btn.primary {
+  background: var(--w-accent);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.w-download-btn.primary:hover:not(:disabled) {
+  background: var(--w-accent-hover);
+  transform: translateY(-1px);
+}
+
+.w-download-btn.danger {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.w-download-btn.danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.w-download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.w-download-feedback {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--w-bg-card-subtle);
+  border: 1px solid var(--w-border-color);
+  color: var(--w-text-main);
+}
+
+/* Stored Offline Bibles List */
+.w-stored-bibles-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.w-stored-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--w-text-muted);
+}
+
+.w-stored-bibles-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.w-offline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--w-bg-card-subtle);
+  border: 1px solid var(--w-border-color);
+  color: var(--w-text-main);
+}
+
+.w-offline-pill.bundled {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}
+
+.w-offline-pill.downloaded {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: var(--w-accent);
+}
+
+.w-offline-pill .pill-meta {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--w-text-muted);
+}
+
+.w-offline-pill-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-left: 2px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--w-text-muted);
+  transition: all 0.15s ease;
+}
+
+.w-offline-pill-del:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Presets Row */
+.w-trans-presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.w-presets-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--w-text-muted);
+  margin-right: 2px;
+}
+
+.w-pill-action-btn {
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid var(--w-border-color);
+  background: var(--w-bg-card-subtle);
+  color: var(--w-text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.w-pill-action-btn:hover {
+  background: var(--w-accent-subtle);
+  border-color: var(--w-accent);
+  color: var(--w-accent);
+}
+
+.w-pill-action-btn.secondary {
+  border-style: dashed;
+}
+
+/* Interactive Checkboxes Grid */
+.w-trans-pills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.w-trans-item-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--w-border-color);
+  background: var(--w-bg-card-subtle);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.w-trans-item-card:hover {
+  border-color: var(--w-accent);
+  transform: translateY(-1px);
+}
+
+.w-trans-item-card.checked {
+  background: var(--w-accent-subtle);
+  border-color: var(--w-accent);
+}
+
+.w-trans-item-card input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--w-accent);
+  flex-shrink: 0;
+}
+
+.w-trans-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.w-trans-item-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.w-trans-code-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--w-accent);
+}
+
+.w-trans-speed-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--w-border-color);
+  color: var(--w-text-muted);
+}
+
+.w-trans-speed-tag.bundled {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.w-trans-speed-tag.downloaded {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--w-accent);
+}
+
+.w-trans-full-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--w-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.w-trans-sync-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  font-size: 12px;
+  color: var(--w-text-muted);
+  margin-top: 4px;
+}
+
+/* Preview Card Header Action Icons */
+.bh-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bh-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--w-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bh-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--w-text-main);
+  transform: translateY(-1px);
+}
+
+.bh-icon-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+}
+
+.bh-preview-card.theme-dark .bh-icon-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--w-text-muted);
+}
+
+.bh-preview-card.theme-dark .bh-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--w-text-main);
+}
+
+.bh-footer-left {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--w-text-muted);
+}
