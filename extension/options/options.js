@@ -91,17 +91,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const DEFAULT_DISABLED_DOMAINS = [
+    'bible.com',
+    'biblegateway.com',
+    'biblehub.com',
+    'openbible.info',
+    'openbible.com',
+    'blueletterbible.org',
+    'esv.org',
     'docs.google.com',
-    'sheets.google.com',
-    'slides.google.com',
-    'drive.google.com',
-    'github.com',
-    'gitlab.com',
-    'vscode.dev',
-    'codepen.io',
-    'codesandbox.io',
-    'figma.com',
-    'canva.com'
+    'googledocs.com',
+    'sheets.google.com'
   ];
 
   // 2. Load Stored Configuration
@@ -126,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       'studyResource',
       'multiPillResources',
       'disabledDomains',
-      'defaultDomainsSeeded'
+      'defaultSitesSeededV2'
     ], resolve);
   });
 
@@ -154,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ? stored.multiPillResources
       : ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube'],
     disabledDomains: Array.isArray(stored.disabledDomains)
-      ? (stored.defaultDomainsSeeded ? stored.disabledDomains : Array.from(new Set([...stored.disabledDomains, ...DEFAULT_DISABLED_DOMAINS])))
+      ? (stored.defaultSitesSeededV2 ? stored.disabledDomains : Array.from(new Set([...stored.disabledDomains, ...DEFAULT_DISABLED_DOMAINS])))
       : [...DEFAULT_DISABLED_DOMAINS]
   };
 
@@ -599,7 +598,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
       item.querySelector('button').addEventListener('click', () => {
         const nextList = config.disabledDomains.filter(d => d !== domain);
-        saveConfig({ disabledDomains: nextList, defaultDomainsSeeded: true });
+        saveConfig({ disabledDomains: nextList, defaultSitesSeededV2: true });
         renderDisabledSites();
       });
       disabledSitesList.appendChild(item);
@@ -612,7 +611,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     val = val.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     if (val && !config.disabledDomains.includes(val)) {
       const nextList = [...config.disabledDomains, val];
-      saveConfig({ disabledDomains: nextList, defaultDomainsSeeded: true });
+      saveConfig({ disabledDomains: nextList, defaultSitesSeededV2: true });
       addDomainInput.value = '';
       renderDisabledSites();
     }
@@ -624,7 +623,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   restoreDefaultDomainsBtn?.addEventListener('click', () => {
     const nextList = Array.from(new Set([...config.disabledDomains, ...DEFAULT_DISABLED_DOMAINS]));
-    saveConfig({ disabledDomains: nextList, defaultDomainsSeeded: true });
+    saveConfig({ disabledDomains: nextList, defaultSitesSeededV2: true });
     renderDisabledSites();
   });
 

@@ -167,6 +167,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   const bottomDashboardBtn = document.getElementById('bottomDashboardBtn');
   const welcomeRateBtn = document.getElementById('welcomeRateBtn');
 
+  const welcomeDefaultSitesGrid = document.getElementById('welcomeDefaultSitesGrid');
+
+  const DEFAULT_DISABLED_DOMAINS = [
+    'bible.com',
+    'biblegateway.com',
+    'biblehub.com',
+    'openbible.info',
+    'openbible.com',
+    'blueletterbible.org',
+    'esv.org',
+    'docs.google.com',
+    'googledocs.com',
+    'sheets.google.com'
+  ];
+
+  const DEFAULT_SITE_ITEMS = [
+    { label: 'bible.com', subtitle: 'YouVersion', domains: ['bible.com'] },
+    { label: 'biblegateway.com', subtitle: 'BibleGateway', domains: ['biblegateway.com'] },
+    { label: 'biblehub.com', subtitle: 'BibleHub', domains: ['biblehub.com'] },
+    { label: 'openbible.info', subtitle: 'OpenBible', domains: ['openbible.info', 'openbible.com'] },
+    { label: 'blueletterbible.org', subtitle: 'Blue Letter Bible', domains: ['blueletterbible.org'] },
+    { label: 'esv.org', subtitle: 'Crossway ESV', domains: ['esv.org'] },
+    { label: 'docs.google.com', subtitle: 'Google Docs', domains: ['docs.google.com', 'googledocs.com'] },
+    { label: 'sheets.google.com', subtitle: 'Google Sheets', domains: ['sheets.google.com'] }
+  ];
+
   // Default configuration
   const DEFAULT_SETTINGS = {
     theme: 'auto',
@@ -181,7 +207,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     detectInlineTranslations: true,
     showTranslationBar: true,
     showSettingsButton: true,
-    enabledTranslations: ['BSB', 'ESV', 'NIV', 'NASB', 'KJV', 'NLT', 'CSB', 'NKJV', 'WEB']
+    enabledTranslations: ['BSB', 'ESV', 'NIV', 'NASB', 'KJV', 'NLT', 'CSB', 'NKJV', 'WEB'],
+    disabledDomains: DEFAULT_DISABLED_DOMAINS,
+    defaultSitesSeededV2: true
   };
 
   // Load stored settings from chrome.storage.local
@@ -198,7 +226,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     ...stored,
     enabledTranslations: Array.isArray(stored.enabledTranslations) && stored.enabledTranslations.length > 0
       ? stored.enabledTranslations
-      : DEFAULT_SETTINGS.enabledTranslations
+      : DEFAULT_SETTINGS.enabledTranslations,
+    disabledDomains: Array.isArray(stored.disabledDomains)
+      ? (stored.defaultSitesSeededV2 ? stored.disabledDomains : Array.from(new Set([...stored.disabledDomains, ...DEFAULT_DISABLED_DOMAINS])))
+      : [...DEFAULT_DISABLED_DOMAINS]
   };
 
   // Active preview translation
@@ -816,6 +847,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Render interactive default-paused sites grid
+  function renderDefaultSitesGrid() {
+    if (!welcomeDefaultSitesGrid) return;
+    welcomeDefaultSitesGrid.innerHTML = '';
+
+    const disabledSet = new Set((config.disabledDomains || []).map(d => String(d).toLowerCase()));
+
+    DEFAULT_SITE_ITEMS.forEach(item => {
+      const isPaused = item.domains.some(d => disabledSet.has(d) || disabledSet.has('www.' + d));
+      const isActive = !isPaused;
+
+      const card = document.createElement('label');
+      card.className = `w-site-toggle-card ${isActive ? 'active' : ''}`;
+      card.title = isActive
+        ? `Bible Hover is ON for ${item.label} (click to pause)`
+        : `Bible Hover is paused by default on ${item.label} (click to enable)`;
+
+      card.innerHTML = `
+        <div class="w-site-toggle-info">
+          <span class="w-site-toggle-domain">${item.label}</span>
+          <span class="w-site-toggle-status">${isActive ? '✓ Active on site' : 'Paused by default'}</span>
+        </div>
+        <label class="w-switch" style="pointer-events:none;">
+          <input type="checkbox" ${isActive ? 'checked' : ''}>
+          <span class="w-slider"></span>
+        </label>
+      `;
+
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const currentList = Array.isArray(config.disabledDomains) ? [...config.disabledDomains] : [];
+        let nextList;
+        if (isPaused) {
+          // Enable site: remove all matching domains for this item
+          const toRemove = new Set(item.domains.flatMap(d => [d, 'www.' + d]));
+          nextList = currentList.filter(d => !toRemove.has(String(d).toLowerCase()));
+        } else {
+          // Pause site: add item's domains back
+          nextList = Array.from(new Set([...currentList, ...item.domains]));
+        }
+        saveSetting({ disabledDomains: nextList, defaultSitesSeededV2: true });
+        renderDefaultSitesGrid();
+      });
+
+      welcomeDefaultSitesGrid.appendChild(card);
+    });
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.disabledDomains) {
+        config.disabledDomains = changes.disabledDomains.newValue || [];
+        renderDefaultSitesGrid();
+      }
+    });
+  }
+
   // System dark/light theme watcher
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (config.theme === 'auto') {
@@ -826,4 +914,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initial load
   setPreviewTranslation(currentPreviewTranslation, false);
   loadOfflineStatus();
+  renderDefaultSitesGrid();
 });

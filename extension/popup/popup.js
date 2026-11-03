@@ -68,8 +68,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  const DEFAULT_DISABLED_DOMAINS = [
+    'bible.com',
+    'biblegateway.com',
+    'biblehub.com',
+    'openbible.info',
+    'openbible.com',
+    'blueletterbible.org',
+    'esv.org',
+    'docs.google.com',
+    'googledocs.com',
+    'sheets.google.com'
+  ];
+
+  function isHostMatchingEntry(host, entry) {
+    const h = String(host || '').toLowerCase().trim();
+    const d = String(entry || '').toLowerCase().trim();
+    if (!h || !d) return false;
+    return h === d || h.endsWith('.' + d) || d === 'www.' + h;
+  }
+
   let currentDomain = '';
-  let disabledDomains = [];
+  let disabledDomains = [...DEFAULT_DISABLED_DOMAINS];
   let lastSearchedPassage = null;
 
   // 1. Get current active tab domain
@@ -107,6 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'fontSize',
     'scriptureFont',
     'disabledDomains',
+    'defaultSitesSeededV2',
     'commentaryMode',
     'preferredCommentary',
     'multiPillResources'
@@ -150,7 +171,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (stored.underlineColor) underlineColor.value = stored.underlineColor;
     if (stored.fontSize) fontSizeSelect.value = stored.fontSize;
     if (stored.scriptureFont && scriptureFont) scriptureFont.value = stored.scriptureFont;
-    if (Array.isArray(stored.disabledDomains)) disabledDomains = stored.disabledDomains;
+    if (Array.isArray(stored.disabledDomains)) {
+      disabledDomains = stored.defaultSitesSeededV2
+        ? stored.disabledDomains
+        : Array.from(new Set([...stored.disabledDomains, ...DEFAULT_DISABLED_DOMAINS]));
+    }
 
     if (stored.commentaryMode) commentaryMode.value = stored.commentaryMode;
     if (stored.preferredCommentary) preferredCommentary.value = stored.preferredCommentary;
@@ -173,15 +198,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 4. Site-Specific Toggle (uBlock Origin Style Power Button + Toggle Switch)
+  function isCurrentSiteDisabled() {
+    if (!currentDomain) return false;
+    return disabledDomains.some(d => isHostMatchingEntry(currentDomain, d));
+  }
+
+  function isDefaultExcludedSite(host) {
+    if (!host) return false;
+    return DEFAULT_DISABLED_DOMAINS.some(d => isHostMatchingEntry(host, d));
+  }
+
   function toggleCurrentSite() {
     if (!currentDomain || isBrowserSystemPage) return;
-    const idx = disabledDomains.indexOf(currentDomain);
-    if (idx >= 0) {
-      disabledDomains.splice(idx, 1);
+    if (isCurrentSiteDisabled()) {
+      // Remove any entry that matches currentDomain (including parent domain like "bible.com" when on "www.bible.com")
+      disabledDomains = disabledDomains.filter(d => !isHostMatchingEntry(currentDomain, d));
     } else {
-      disabledDomains.push(currentDomain);
+      const cleanDomain = currentDomain.replace(/^www\./, '');
+      if (!disabledDomains.includes(cleanDomain)) {
+        disabledDomains.push(cleanDomain);
+      }
     }
-    chrome.storage.local.set({ disabledDomains }, () => {
+    chrome.storage.local.set({ disabledDomains, defaultSitesSeededV2: true }, () => {
       updateSiteToggleUI();
     });
   }
@@ -218,7 +256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const isDomainDisabled = disabledDomains.includes(currentDomain);
+    const isDomainDisabled = isCurrentSiteDisabled();
     if (isDomainDisabled) {
       if (siteCard) siteCard.classList.add('paused');
       if (sitePowerBtn) {
@@ -231,7 +269,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (siteStatusDot) siteStatusDot.className = 'site-status-dot paused';
       if (siteStatusText) {
-        siteStatusText.textContent = 'Paused on this website';
+        siteStatusText.textContent = isDefaultExcludedSite(currentDomain)
+          ? 'Paused by default • Click to enable'
+          : 'Paused on this website';
         siteStatusText.className = 'site-status-text paused';
       }
     } else {

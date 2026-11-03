@@ -33,17 +33,16 @@
     scriptureFont: 'sans',
     hoverDelay: 120,
     disabledDomains: [
+      'bible.com',
+      'biblegateway.com',
+      'biblehub.com',
+      'openbible.info',
+      'openbible.com',
+      'blueletterbible.org',
+      'esv.org',
       'docs.google.com',
-      'sheets.google.com',
-      'slides.google.com',
-      'drive.google.com',
-      'github.com',
-      'gitlab.com',
-      'vscode.dev',
-      'codepen.io',
-      'codesandbox.io',
-      'figma.com',
-      'canva.com'
+      'googledocs.com',
+      'sheets.google.com'
     ],
     commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
     preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
@@ -140,7 +139,11 @@
   function checkSiteDisabled(disabledDomains) {
     if (!Array.isArray(disabledDomains)) return false;
     const host = window.location.hostname.toLowerCase();
-    return disabledDomains.some(d => host === d.toLowerCase() || host.endsWith('.' + d.toLowerCase()));
+    return disabledDomains.some(d => {
+      const clean = String(d || '').toLowerCase().trim();
+      if (!clean) return false;
+      return host === clean || host.endsWith('.' + clean) || clean === 'www.' + host;
+    });
   }
 
   // Safe message sender to prevent "Extension context invalidated" & unhandled lastError
@@ -2594,6 +2597,17 @@
       document.head.appendChild(dynamicStyleEl);
     }
 
+    if (!config.enabled || isSiteDisabled) {
+      dynamicStyleEl.textContent = `
+        .bh-ref {
+          text-decoration: none !important;
+          background-color: transparent !important;
+          cursor: inherit !important;
+        }
+      `;
+      return;
+    }
+
     let decoration = 'none';
     let background = 'transparent';
 
@@ -2903,6 +2917,8 @@
   }
 
   function applyScanningMode() {
+    updateDynamicUnderlineStyles();
+
     if (!config.enabled || isSiteDisabled) {
       hideTooltip(true);
       if (observer) observer.disconnect();

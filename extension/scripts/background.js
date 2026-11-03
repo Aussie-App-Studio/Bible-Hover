@@ -9,17 +9,16 @@ importScripts('../shared/bible-metadata.js');
 const { BOOKS, BOOK_BY_ID, TRANSLATIONS } = globalThis.BibleHoverMeta;
 
 const DEFAULT_DISABLED_DOMAINS = [
+  'bible.com',
+  'biblegateway.com',
+  'biblehub.com',
+  'openbible.info',
+  'openbible.com',
+  'blueletterbible.org',
+  'esv.org',
   'docs.google.com',
-  'sheets.google.com',
-  'slides.google.com',
-  'drive.google.com',
-  'github.com',
-  'gitlab.com',
-  'vscode.dev',
-  'codepen.io',
-  'codesandbox.io',
-  'figma.com',
-  'canva.com'
+  'googledocs.com',
+  'sheets.google.com'
 ];
 
 const DEFAULT_SETTINGS = {
@@ -39,7 +38,7 @@ const DEFAULT_SETTINGS = {
   scriptureFont: 'sans',  // 'sans' | 'serif' | 'garamond' | 'humanist' | 'dyslexic' | 'mono'
   hoverDelay: 120,
   disabledDomains: DEFAULT_DISABLED_DOMAINS,
-  defaultDomainsSeeded: true,
+  defaultSitesSeededV2: true,
   commentaryMode: 'direct_link', // 'direct_link' | 'in_card_tab' | 'side_drawer' | 'multi_pills'
   preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
   multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube'],
@@ -283,10 +282,10 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
     if (stored[k] === undefined) toSet[k] = v;
   }
-  if (!stored.defaultDomainsSeeded) {
+  if (!stored.defaultSitesSeededV2) {
     const existing = Array.isArray(stored.disabledDomains) ? stored.disabledDomains : [];
     toSet.disabledDomains = Array.from(new Set([...existing, ...DEFAULT_DISABLED_DOMAINS]));
-    toSet.defaultDomainsSeeded = true;
+    toSet.defaultSitesSeededV2 = true;
   }
   if (!stored.installDate) {
     toSet.installDate = Date.now();
@@ -319,7 +318,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
 // Run maintenance check on worker initialization
 pruneChapterCache().catch(() => {});
-chrome.storage?.local?.get(['studyResource', 'installDate', 'defaultDomainsSeeded', 'disabledDomains'], (res) => {
+chrome.storage?.local?.get(['studyResource', 'installDate', 'defaultSitesSeededV2', 'disabledDomains'], (res) => {
   const patch = {};
   if (res?.studyResource === 'gty') {
     patch.studyResource = 'thesingingbible';
@@ -327,10 +326,10 @@ chrome.storage?.local?.get(['studyResource', 'installDate', 'defaultDomainsSeede
   if (!res?.installDate) {
     patch.installDate = Date.now();
   }
-  if (!res?.defaultDomainsSeeded) {
+  if (!res?.defaultSitesSeededV2) {
     const existing = Array.isArray(res?.disabledDomains) ? res.disabledDomains : [];
     patch.disabledDomains = Array.from(new Set([...existing, ...DEFAULT_DISABLED_DOMAINS]));
-    patch.defaultDomainsSeeded = true;
+    patch.defaultSitesSeededV2 = true;
   }
   if (Object.keys(patch).length > 0) {
     chrome.storage.local.set(patch);
