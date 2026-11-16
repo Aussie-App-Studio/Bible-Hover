@@ -135,13 +135,25 @@
     return false;
   }
 
+  function isPublishedGoogleDoc(host, pathname) {
+    return (host === 'docs.google.com' || host.endsWith('.docs.google.com')) &&
+      /\/pub(html)?(\/|$)/i.test(pathname || '');
+  }
+
   // Check if current hostname is disabled in settings
   function checkSiteDisabled(disabledDomains) {
     if (!Array.isArray(disabledDomains)) return false;
     const host = window.location.hostname.toLowerCase();
+    const publishedDoc = isPublishedGoogleDoc(host, window.location.pathname);
     return disabledDomains.some(d => {
       const clean = String(d || '').toLowerCase().trim();
       if (!clean) return false;
+      if (clean === 'docs.google.com/pub') {
+        return publishedDoc;
+      }
+      if (publishedDoc && (clean === 'docs.google.com' || clean === 'googledocs.com')) {
+        return false;
+      }
       return host === clean || host.endsWith('.' + clean) || clean === 'www.' + host;
     });
   }

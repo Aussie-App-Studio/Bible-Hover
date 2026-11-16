@@ -18,13 +18,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const resultCopyBtn = document.getElementById('resultCopyBtn');
 
   const currentDomainEl = document.getElementById('currentDomain');
+  const siteLabelEl = document.getElementById('siteLabel');
   const siteCard = document.getElementById('siteCard');
   const sitePowerBtn = document.getElementById('sitePowerBtn');
   const siteToggleSwitch = document.getElementById('siteToggleSwitch');
   const siteStatusDot = document.getElementById('siteStatusDot');
   const siteStatusText = document.getElementById('siteStatusText');
   const siteDetailsClickArea = document.getElementById('siteDetailsClickArea');
-  let isBrowserSystemPage = false;
+  const siteNoticeCard = document.getElementById('siteNoticeCard');
 
   const defaultTranslation = document.getElementById('defaultTranslation');
   const studyResource = document.getElementById('studyResource');
@@ -88,28 +89,156 @@ document.addEventListener('DOMContentLoaded', async () => {
     return h === d || h.endsWith('.' + d) || d === 'www.' + h;
   }
 
+  function extractFileName(pathname, fallback) {
+    try {
+      const last = String(pathname || '').split('/').filter(Boolean).pop();
+      return last ? decodeURIComponent(last) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function analyzeTabUrl(rawUrl) {
+    const fallback = {
+      kind: 'system',
+      domain: '',
+      displayDomain: 'Browser System Page',
+      label: 'Browser Page',
+      isPublishedDoc: false
+    };
+    if (!rawUrl) return fallback;
+
+    try {
+      const url = new URL(rawUrl);
+      const protocol = url.protocol.toLowerCase();
+      const host = url.hostname.toLowerCase();
+      const pathname = url.pathname || '';
+      const isChromePdfViewer =
+        protocol === 'chrome-extension:' && host === 'mhjfbmdgcfjbbpaeojofohoefgiehjai';
+
+      if (pathname.toLowerCase().endsWith('.pdf') || isChromePdfViewer) {
+        return {
+          kind: 'pdf',
+          domain: '',
+          displayDomain: extractFileName(pathname, 'PDF Document'),
+          label: 'PDF Document',
+          isPublishedDoc: false
+        };
+      }
+
+      if (protocol === 'file:') {
+        return {
+          kind: 'local_file',
+          domain: '',
+          displayDomain: extractFileName(pathname, 'Local File'),
+          label: 'Local File',
+          isPublishedDoc: false
+        };
+      }
+
+      if (protocol.startsWith('http')) {
+        const isDocsHost =
+          host === 'docs.google.com' ||
+          host.endsWith('.docs.google.com') ||
+          host === 'googledocs.com' ||
+          host.endsWith('.googledocs.com');
+        const isPublishedDoc = isDocsHost && /\/pub(html)?(\/|$)/i.test(pathname);
+
+        if (isPublishedDoc) {
+          return {
+            kind: 'web',
+            domain: host,
+            displayDomain: host,
+            label: 'Published Google Doc',
+            isPublishedDoc: true
+          };
+        }
+
+        if (isDocsHost && /^\/forms\//i.test(pathname)) {
+          return {
+            kind: 'web',
+            domain: host,
+            displayDomain: host,
+            label: 'Google Forms',
+            isPublishedDoc: false
+          };
+        }
+
+        if (
+          host === 'sheets.google.com' ||
+          host.endsWith('.sheets.google.com') ||
+          (isDocsHost && /^\/spreadsheets\//i.test(pathname))
+        ) {
+          return {
+            kind: 'google_sheets',
+            domain: host,
+            displayDomain: host,
+            label: 'Google Sheets',
+            isPublishedDoc: false
+          };
+        }
+
+        if (isDocsHost) {
+          return {
+            kind: 'google_docs',
+            domain: host,
+            displayDomain: host,
+            label: 'Google Docs Editor',
+            isPublishedDoc: false
+          };
+        }
+
+        return {
+          kind: 'web',
+          domain: host,
+          displayDomain: host,
+          label: 'Current Website',
+          isPublishedDoc: false
+        };
+      }
+
+      return fallback;
+    } catch {
+      return {
+        kind: 'system',
+        domain: '',
+        displayDomain: 'Unknown Page',
+        label: 'Browser Page',
+        isPublishedDoc: false
+      };
+    }
+  }
+
+  let tabInfo = analyzeTabUrl('');
   let currentDomain = '';
+  let isFileAccessAllowed = null;
   let disabledDomains = [...DEFAULT_DISABLED_DOMAINS];
   let lastSearchedPassage = null;
 
-  // 1. Get current active tab domain
+  // 1. Get current active tab context
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]?.url) {
-      const url = new URL(tabs[0].url);
-      if (url.protocol.startsWith('http')) {
-        currentDomain = url.hostname.toLowerCase();
-        currentDomainEl.textContent = currentDomain;
-        currentDomainEl.title = currentDomain;
-      } else {
-        isBrowserSystemPage = true;
-        currentDomainEl.textContent = 'Browser System Page';
-      }
+      tabInfo = analyzeTabUrl(tabs[0].url);
+      currentDomain = tabInfo.domain;
     }
   } catch (e) {
-    currentDomainEl.textContent = 'Unknown Page';
-    isBrowserSystemPage = true;
+    tabInfo = analyzeTabUrl('');
   }
+
+  if (tabInfo.kind === 'local_file' && chrome.extension?.isAllowedFileSchemeAccess) {
+    try {
+      isFileAccessAllowed = await new Promise((resolve) => {
+        chrome.extension.isAllowedFileSchemeAccess((allowed) => resolve(Boolean(allowed)));
+      });
+    } catch {
+      isFileAccessAllowed = null;
+    }
+  }
+
+  if (siteLabelEl) siteLabelEl.textContent = tabInfo.label;
+  currentDomainEl.textContent = tabInfo.displayDomain;
+  currentDomainEl.title = tabInfo.displayDomain;
 
   // 2. Load stored settings
   const stored = await chrome.storage.local.get([
@@ -198,8 +327,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 4. Site-Specific Toggle (uBlock Origin Style Power Button + Toggle Switch)
+  function canToggleCurrentSite() {
+    return tabInfo.kind === 'web' && Boolean(currentDomain);
+  }
+
   function isCurrentSiteDisabled() {
     if (!currentDomain) return false;
+    if (tabInfo.isPublishedDoc) {
+      return disabledDomains.some(d => String(d || '').toLowerCase().trim() === 'docs.google.com/pub');
+    }
     return disabledDomains.some(d => isHostMatchingEntry(currentDomain, d));
   }
 
@@ -209,8 +345,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function toggleCurrentSite() {
-    if (!currentDomain || isBrowserSystemPage) return;
-    if (isCurrentSiteDisabled()) {
+    if (!canToggleCurrentSite()) return;
+    if (tabInfo.isPublishedDoc) {
+      if (isCurrentSiteDisabled()) {
+        disabledDomains = disabledDomains.filter(d => String(d || '').toLowerCase().trim() !== 'docs.google.com/pub');
+      } else if (!disabledDomains.includes('docs.google.com/pub')) {
+        disabledDomains.push('docs.google.com/pub');
+      }
+    } else if (isCurrentSiteDisabled()) {
       // Remove any entry that matches currentDomain (including parent domain like "bible.com" when on "www.bible.com")
       disabledDomains = disabledDomains.filter(d => !isHostMatchingEntry(currentDomain, d));
     } else {
@@ -237,24 +379,228 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleCurrentSite();
   });
 
+  function appendBoldSegments(parent, parts) {
+    for (const part of parts) {
+      if (typeof part === 'string') {
+        parent.appendChild(document.createTextNode(part));
+      } else if (part && part.bold) {
+        const strong = document.createElement('strong');
+        strong.textContent = part.bold;
+        parent.appendChild(strong);
+      }
+    }
+  }
+
+  function buildNoticeGuide(guideTitle, steps, altParts) {
+    const guide = document.createElement('div');
+    guide.className = 'site-notice-guide';
+
+    if (guideTitle) {
+      const heading = document.createElement('div');
+      heading.className = 'site-notice-guide-title';
+      heading.textContent = guideTitle;
+      guide.appendChild(heading);
+    }
+
+    const stepsList = document.createElement('div');
+    stepsList.className = 'site-notice-steps';
+    steps.forEach((stepParts, idx) => {
+      const row = document.createElement('div');
+      row.className = 'site-notice-step';
+
+      const num = document.createElement('span');
+      num.className = 'site-notice-step-num';
+      num.textContent = String(idx + 1);
+
+      const text = document.createElement('span');
+      appendBoldSegments(text, stepParts);
+
+      row.appendChild(num);
+      row.appendChild(text);
+      stepsList.appendChild(row);
+    });
+    guide.appendChild(stepsList);
+
+    if (altParts) {
+      const alt = document.createElement('div');
+      alt.className = 'site-notice-alt';
+      appendBoldSegments(alt, altParts);
+      guide.appendChild(alt);
+    }
+
+    return guide;
+  }
+
+  function renderSiteNotice() {
+    if (!siteNoticeCard) return;
+    siteNoticeCard.innerHTML = '';
+
+    let icon = '';
+    let title = '';
+    let descParts = null;
+    let guide = null;
+    let actionBtn = null;
+
+    if (tabInfo.kind === 'google_docs') {
+      icon = '📝';
+      title = 'Why Bible Hover isn’t active while editing';
+      descParts = [
+        'Google Docs draws pages like an image instead of standard webpage text, so extensions can’t underline verses in the editor.'
+      ];
+      guide = buildNoticeGuide(
+        'How to read this Doc with Bible Hover (Publish to web):',
+        [
+          ['In Google Docs, click ', { bold: 'File' }, ' → ', { bold: 'Share' }, ' → ', { bold: 'Publish to web' }, '.'],
+          ['Click ', { bold: 'Publish' }, ' and open the link it gives you.'],
+          ['Hover any verse — existing links (like BibleGateway) still open when clicked!']
+        ],
+        [
+          { bold: 'Keep it private? ' },
+          'Use ',
+          { bold: 'File → Download → Web Page (.html, zipped)' },
+          ', unzip it, and open the ',
+          { bold: '.html' },
+          ' file in Chrome.'
+        ]
+      );
+    } else if (tabInfo.kind === 'google_sheets') {
+      icon = '📊';
+      title = 'Why Bible Hover isn’t active in Google Sheets';
+      descParts = [
+        'Google Sheets draws cells on a spreadsheet grid instead of normal webpage text. Use ',
+        { bold: 'Quick Search' },
+        ' above, or ',
+        { bold: 'File → Share → Publish to web' },
+        ' to view it as a webpage.'
+      ];
+    } else if (tabInfo.kind === 'pdf') {
+      icon = '📄';
+      title = 'Chrome’s PDF viewer blocks hover previews';
+      descParts = [
+        'Browser extensions aren’t allowed to scan or underline verses inside PDF files.'
+      ];
+      guide = buildNoticeGuide(
+        'Easy ways to view this with Bible Hover:',
+        [
+          ['From Google Docs? Use ', { bold: 'File → Share → Publish to web' }, ' instead of downloading as a PDF.'],
+          ['Or download as ', { bold: 'Web Page (.html, zipped)' }, ' and open the ', { bold: '.html' }, ' file in Chrome.']
+        ],
+        ['You can also type or paste any reference into ', { bold: 'Quick Search' }, ' at the top.']
+      );
+    } else if (tabInfo.kind === 'local_file' && isFileAccessAllowed !== true) {
+      icon = '📁';
+      title = 'Local file access is turned off';
+      descParts = [
+        'Chrome blocks extensions from local HTML files by default.'
+      ];
+      guide = buildNoticeGuide(
+        'To enable Bible Hover on local HTML files:',
+        [
+          ['Open ', { bold: 'Extension Details' }, ' using the button below.'],
+          ['Turn on ', { bold: 'Allow access to file URLs' }, ', then refresh this tab.']
+        ]
+      );
+      if (chrome.runtime?.id && chrome.tabs?.create) {
+        actionBtn = document.createElement('button');
+        actionBtn.type = 'button';
+        actionBtn.className = 'site-notice-action-btn';
+        actionBtn.textContent = 'Open Extension Details ↗';
+        actionBtn.addEventListener('click', () => {
+          chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+        });
+      }
+    } else {
+      siteNoticeCard.style.display = 'none';
+      return;
+    }
+
+    const header = document.createElement('div');
+    header.className = 'site-notice-header';
+
+    const iconEl = document.createElement('span');
+    iconEl.className = 'site-notice-icon';
+    iconEl.textContent = icon;
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'site-notice-title';
+    titleEl.textContent = title;
+
+    header.appendChild(iconEl);
+    header.appendChild(titleEl);
+    siteNoticeCard.appendChild(header);
+
+    if (descParts) {
+      const desc = document.createElement('p');
+      desc.className = 'site-notice-desc';
+      appendBoldSegments(desc, descParts);
+      siteNoticeCard.appendChild(desc);
+    }
+
+    if (guide) siteNoticeCard.appendChild(guide);
+    if (actionBtn) siteNoticeCard.appendChild(actionBtn);
+
+    siteNoticeCard.style.display = 'flex';
+  }
+
   function updateSiteToggleUI() {
-    if (!currentDomain || isBrowserSystemPage) {
+    if (siteLabelEl) siteLabelEl.textContent = tabInfo.label;
+    currentDomainEl.textContent = tabInfo.displayDomain;
+    currentDomainEl.title = tabInfo.displayDomain;
+
+    if (!canToggleCurrentSite()) {
+      const isLocalActive = tabInfo.kind === 'local_file' && isFileAccessAllowed === true;
+      const statusVariant = isLocalActive
+        ? 'active'
+        : tabInfo.kind === 'system'
+          ? 'paused'
+          : 'notice';
+
+      const statusMessages = {
+        google_docs: 'Not supported in Docs editor',
+        google_sheets: 'Not supported in Sheets editor',
+        pdf: 'Not supported in PDF viewer',
+        local_file: isLocalActive ? 'Active on this local file' : 'Local file access is off',
+        system: 'Unavailable on browser system pages'
+      };
+
       if (sitePowerBtn) {
         sitePowerBtn.disabled = true;
-        sitePowerBtn.className = 'site-power-btn paused';
+        sitePowerBtn.className = `site-power-btn ${isLocalActive ? 'active' : 'paused'}`;
+        sitePowerBtn.title = isLocalActive
+          ? 'Managed via "Allow access to file URLs" in Extension Details'
+          : statusMessages[tabInfo.kind] || 'Unavailable on this page';
       }
       if (siteToggleSwitch) {
         siteToggleSwitch.disabled = true;
-        siteToggleSwitch.checked = false;
+        siteToggleSwitch.checked = isLocalActive;
+        siteToggleSwitch.title = sitePowerBtn?.title || '';
       }
-      if (siteStatusDot) siteStatusDot.className = 'site-status-dot paused';
+      if (siteDetailsClickArea) {
+        siteDetailsClickArea.classList.add('non-interactive');
+        siteDetailsClickArea.removeAttribute('title');
+      }
+      if (siteStatusDot) siteStatusDot.className = `site-status-dot ${statusVariant}`;
       if (siteStatusText) {
-        siteStatusText.textContent = 'Inactive on system pages';
-        siteStatusText.className = 'site-status-text paused';
+        siteStatusText.textContent = statusMessages[tabInfo.kind] || 'Unavailable on this page';
+        siteStatusText.className = `site-status-text ${statusVariant}`;
       }
-      if (siteCard) siteCard.classList.add('paused');
+      if (siteCard) {
+        if (isLocalActive) {
+          siteCard.classList.remove('paused');
+        } else {
+          siteCard.classList.add('paused');
+        }
+      }
+      renderSiteNotice();
       return;
     }
+
+    if (siteDetailsClickArea) {
+      siteDetailsClickArea.classList.remove('non-interactive');
+      siteDetailsClickArea.title = 'Click to toggle Bible Hover for this website';
+    }
+    if (sitePowerBtn) sitePowerBtn.disabled = false;
+    if (siteToggleSwitch) siteToggleSwitch.disabled = false;
 
     const isDomainDisabled = isCurrentSiteDisabled();
     if (isDomainDisabled) {
@@ -269,9 +615,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (siteStatusDot) siteStatusDot.className = 'site-status-dot paused';
       if (siteStatusText) {
-        siteStatusText.textContent = isDefaultExcludedSite(currentDomain)
-          ? 'Paused by default • Click to enable'
-          : 'Paused on this website';
+        if (tabInfo.isPublishedDoc) {
+          siteStatusText.textContent = 'Paused on published docs • Click to enable';
+        } else {
+          siteStatusText.textContent = isDefaultExcludedSite(currentDomain)
+            ? 'Paused by default • Click to enable'
+            : 'Paused on this website';
+        }
         siteStatusText.className = 'site-status-text paused';
       }
     } else {
@@ -286,10 +636,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (siteStatusDot) siteStatusDot.className = 'site-status-dot active';
       if (siteStatusText) {
-        siteStatusText.textContent = 'Active on this website';
+        siteStatusText.textContent = tabInfo.isPublishedDoc
+          ? 'Active on published Google Doc'
+          : 'Active on this website';
         siteStatusText.className = 'site-status-text active';
       }
     }
+    renderSiteNotice();
   }
 
   // 5. Settings Change Handlers
