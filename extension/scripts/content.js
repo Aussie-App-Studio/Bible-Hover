@@ -338,6 +338,8 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        user-select: text;
+        cursor: text;
       }
       .bh-badge {
         font-size: 10.5px;
