@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   const coreList = ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'];
-  const intlList = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'];
+  const intlList = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NVI', 'NTV', 'BTX3', 'NTBT', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'];
 
   function renderTranslationCards() {
     const renderGroup = (container, list) => {

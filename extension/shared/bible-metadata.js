@@ -560,6 +560,50 @@
       bollsCode: 'RV1960',
       copyright: 'Sociedades Bíblicas Unidas'
     },
+    NVI: {
+      id: 'NVI',
+      name: 'Nueva Versión Internacional',
+      shortName: 'NVI',
+      language: 'Spanish',
+      flag: '🇪🇸',
+      bundled: false,
+      downloadable: false,
+      bpCode: 'NVI',
+      copyright: 'Biblica'
+    },
+    NTV: {
+      id: 'NTV',
+      name: 'Nueva Traducción Viviente',
+      shortName: 'NTV',
+      language: 'Spanish',
+      flag: '🇪🇸',
+      bundled: false,
+      downloadable: true,
+      bollsCode: 'NTV',
+      copyright: 'Tyndale House'
+    },
+    BTX3: {
+      id: 'BTX3',
+      name: 'La Biblia Textual (3ª Ed.)',
+      shortName: 'BTX3',
+      language: 'Spanish',
+      flag: '🇪🇸',
+      bundled: false,
+      downloadable: true,
+      bollsCode: 'BTX3',
+      copyright: 'Sociedad Bíblica Iberoamericana'
+    },
+    NTBT: {
+      id: 'NTBT',
+      name: 'Nueva Traducción BibliaTodo',
+      shortName: 'NTBT',
+      language: 'Spanish',
+      flag: '🇪🇸',
+      bundled: false,
+      downloadable: true,
+      bollsCode: 'NTBT',
+      copyright: 'BibliaTodo Bible Society (NTBT)'
+    },
     // Portuguese
     NAA: {
       id: 'NAA',
@@ -697,6 +741,11 @@
     'RVR60': 'RV1960',
     'RVR1960': 'RV1960',
     'RV60': 'RV1960',
+    'NVI': 'NVI',
+    'NTV': 'NTV',
+    'BTX3': 'BTX3',
+    'BTX': 'BTX3',
+    'NTBT': 'NTBT',
     // Portuguese
     'NAA': 'NAA',
     'ARA': 'ARA',

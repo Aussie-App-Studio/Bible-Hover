@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   const CORE_ENGLISH_LIST = ['BSB', 'ESV', 'NIV', 'NASB', 'KJV', 'NLT', 'CSB', 'NKJV', 'WEB'];
-  const INTL_LIST = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'];
+  const INTL_LIST = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NVI', 'NTV', 'BTX3', 'NTBT', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'];
 
   // Hardcoded Romans 6:1-2 in all 22 supported translations with targeted keyword underline
   const SAMPLE_PASSAGES = {
@@ -76,6 +76,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     RV1960: {
       v1: '¿Qué, pues, diremos? ¿Perseveraremos en el <span id="sampleUnderlineWord">pecado</span> para que la gracia abunde?',
       v2: 'En ninguna manera. Porque los que hemos muerto al pecado, ¿cómo viviremos aún en él?'
+    },
+    NVI: {
+      v1: '¿Qué concluiremos? ¿Vamos a persistir en el <span id="sampleUnderlineWord">pecado</span> para que la gracia abunde?',
+      v2: '¡De ninguna manera! Nosotros, que hemos muerto al pecado, ¿cómo podemos seguir viviendo en él?'
+    },
+    NTV: {
+      v1: 'Ahora bien, ¿deberíamos seguir <span id="sampleUnderlineWord">pecando</span> para que Dios nos muestre más y más su gracia maravillosa?',
+      v2: '¡Por supuesto que no! Nosotros hemos muerto al pecado, entonces, ¿cómo es posible que sigamos viviendo en pecado?'
+    },
+    BTX3: {
+      v1: '¿Qué pues diremos? ¿Permanezcamos en el <span id="sampleUnderlineWord">pecado</span> para que la gracia abunde?',
+      v2: '¡De ninguna manera! porque los que hemos muerto al pecado, ¿cómo viviremos aún en él?'
+    },
+    NTBT: {
+      v1: '¿Qué diremos, entonces? ¿Seguiremos en el <span id="sampleUnderlineWord">pecado</span> para que abunde la gracia?',
+      v2: '¡De ningún modo! Los que hemos muerto al pecado, ¿cómo seguiremos viviendo en él?'
     },
     // Portuguese
     NAA: {

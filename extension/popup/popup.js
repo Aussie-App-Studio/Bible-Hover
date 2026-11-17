@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cb.checked = activeSet.has(cb.value);
       });
       updateIntlActiveCount(activeSet);
-      const hasActiveIntl = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'].some(v => activeSet.has(v));
+      const hasActiveIntl = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NVI', 'NTV', 'BTX3', 'NTBT', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'].some(v => activeSet.has(v));
       if (hasActiveIntl && intlTransContainer) {
         intlTransContainer.style.display = 'block';
         if (toggleIntlLangsBtn) toggleIntlLangsBtn.textContent = '− Hide';
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateIntlActiveCount(activeSet) {
     if (!intlActiveCount) return;
-    const intlValues = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'];
+    const intlValues = ['TUR', 'UBIO', 'LBLA', 'RV1960', 'NVI', 'NTV', 'BTX3', 'NTBT', 'NAA', 'ARA', 'SCH2000', 'CUNPS', 'CUNP', 'KRV', 'HIOV', 'SYNOD', 'NRT'];
     const count = intlValues.filter(v => activeSet.has(v)).length;
     if (count > 0) {
       intlActiveCount.textContent = `(${count} active)`;
