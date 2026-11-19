@@ -376,14 +376,8 @@
         border-radius: 4px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        background: #3b82f6;
+        background: #2563eb;
         color: #ffffff;
-      }
-      .bh-badge.offline {
-        background: #10b981;
-      }
-      .bh-badge.cached {
-        background: #8b5cf6;
       }
 
       .bh-actions {
@@ -1670,6 +1664,37 @@
     }, true);
   }
 
+  // 7 distinct hues for the translation badge in the hover card header
+  const TRANSLATION_BADGE_COLORS = [
+    '#2563eb', // Blue
+    '#059669', // Emerald
+    '#7c3aed', // Violet
+    '#b45309', // Amber
+    '#e11d48', // Rose
+    '#0891b2', // Teal
+    '#a21caf'  // Fuchsia
+  ];
+
+  function getActiveTranslationList() {
+    const list = Array.isArray(config.enabledTranslations) && config.enabledTranslations.length > 0
+      ? [...config.enabledTranslations]
+      : ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'];
+
+    if (currentActiveTranslation && !list.includes(currentActiveTranslation)) {
+      list.push(currentActiveTranslation);
+    }
+    return list;
+  }
+
+  function getTranslationBadgeColor(translation) {
+    const list = getActiveTranslationList();
+    const idx = list.indexOf(translation);
+    if (idx >= 0) {
+      return TRANSLATION_BADGE_COLORS[idx % TRANSLATION_BADGE_COLORS.length];
+    }
+    return TRANSLATION_BADGE_COLORS[0];
+  }
+
   // Populate translation pill selector bar
   function renderTranslationBar() {
     const bar = shadowRoot.getElementById('bhTransBar');
@@ -1677,13 +1702,7 @@
     setupHorizontalScrollable(bar);
 
     // If translation switcher bar is turned off by user, or only 1 or 0 translations enabled, hide the bar!
-    let enabledList = Array.isArray(config.enabledTranslations) && config.enabledTranslations.length > 0
-      ? [...config.enabledTranslations]
-      : ['BSB', 'KJV', 'ESV', 'NIV', 'NLT', 'NASB', 'CSB', 'NKJV', 'WEB'];
-
-    if (currentActiveTranslation && !enabledList.includes(currentActiveTranslation)) {
-      enabledList.push(currentActiveTranslation);
-    }
+    const enabledList = getActiveTranslationList();
 
     if (config.minimalistMode || !config.showTranslationBar || enabledList.length <= 1) {
       bar.style.display = 'none';
@@ -1741,7 +1760,13 @@
 
       // Update badge & footer
       badge.textContent = res.translation;
-      badge.className = `bh-badge ${res.source}`;
+      badge.className = 'bh-badge';
+      badge.style.backgroundColor = getTranslationBadgeColor(res.translation);
+      badge.title = res.source === 'offline'
+        ? `${res.translationName || res.translation} (Offline)`
+        : res.source === 'cached'
+          ? `${res.translationName || res.translation} (Cached)`
+          : (res.translationName || res.translation);
       footerLeft.textContent = res.translationName || res.translation;
 
       // Cache passage result
