@@ -408,11 +408,14 @@
   };
 
   for (const [idStr, aliases] of Object.entries(MULTILINGUAL_BOOK_ALIASES)) {
-    const book = BOOKS.find(b => b.id === Number(idStr));
-    if (book) {
+    const id = Number(idStr);
+    const book = BOOKS[id - 1];
+    if (book && book.id === id) {
+      const existing = new Set(book.aliases);
       for (const a of aliases) {
-        if (!book.aliases.includes(a)) {
+        if (!existing.has(a)) {
           book.aliases.push(a);
+          existing.add(a);
         }
       }
     }
@@ -801,14 +804,6 @@
     return BOOK_BY_ALIAS.get(compact) || null;
   }
 
-  // Sort all aliases longest-first to build regex alternation so "1 John" matches before "John", "Song of Solomon" before "Song", etc.
-  const allAliasesSorted = Array.from(BOOK_BY_ALIAS.keys()).sort((a, b) => b.length - a.length);
-  const escapedAliases = allAliasesSorted.map(a =>
-    a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+')
-  );
-
-  const translationKeys = Object.keys(TRANSLATION_ALIASES).join('|');
-
   const DASH_CHAR = '[-–—−‐‑‒―~〜﹣－]';
   const DASH_PART = `(?:${DASH_CHAR}|\\s+(?:to|through)\\s+)`;
   const COLON_PART = `(?:[:.：··\\uFE55]\\s*(?:vv?\\.?|verses?)?|\\s*\\b(?:vv?\\.?|verses?)\\s*|\\s*,\\s*(?=\\d))`;
@@ -816,24 +811,60 @@
   const DASH_PART_REGEX = new RegExp(DASH_PART, 'gi');
   const COLON_PART_REGEX = new RegExp(COLON_PART, 'gi');
 
+  // Lazy-compiled reference regexes: avoids sorting 800+ aliases and building/compiling
+  // large RegExp instances in contexts that never scan text (e.g., background worker, disabled tabs).
+  let _translationKeys = null;
+  let _masterRefRegex = null;
+  let _probeBookRegex = null;
+  let _chainContinuationRegex = null;
+
+  function getTranslationKeys() {
+    if (_translationKeys === null) {
+      _translationKeys = Object.keys(TRANSLATION_ALIASES).join('|');
+    }
+    return _translationKeys;
+  }
+
   // Master regex to detect primary Scripture references in text
   // Groups:
   // 1: Book name/abbreviation (with optional trailing period)
   // 2: Chapter + Verse/Range specification (e.g. "3:16-18", "1:26-2:3", "23")
   // 3: Optional trailing translation tag, e.g. "(ESV)" or "NIV" or "[KJV]" or ", NIV"
-  const MASTER_REF_REGEX = new RegExp(
-    `(?<![\\p{L}\\p{N}_])((?:${escapedAliases.join('|')})\\.?)(?:\\s+)(\\d{1,3}(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?(?:\\s*(?:${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?|ff\\b))?(?:\\s*,\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?)?)*|\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
-    'giu'
-  );
+  function getMasterRefRegex() {
+    if (!_masterRefRegex) {
+      // Sort all aliases longest-first so "1 John" matches before "John", "Song of Solomon" before "Song", etc.
+      const allAliasesSorted = Array.from(BOOK_BY_ALIAS.keys()).sort((a, b) => b.length - a.length);
+      const escapedAliases = allAliasesSorted.map(a =>
+        a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+')
+      );
+      const translationKeys = getTranslationKeys();
+      _masterRefRegex = new RegExp(
+        `(?<![\\p{L}\\p{N}_])((?:${escapedAliases.join('|')})\\.?)(?:\\s+)(\\d{1,3}(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?(?:\\s*(?:${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?|ff\\b))?(?:\\s*,\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?)?)*|\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
+        'giu'
+      );
+    }
+    return _masterRefRegex;
+  }
 
   // Pre-compiled non-global regex to check if chained text starts a brand new Book reference
-  const PROBE_BOOK_REGEX = new RegExp(MASTER_REF_REGEX.source, 'i');
+  function getProbeBookRegex() {
+    if (!_probeBookRegex) {
+      _probeBookRegex = new RegExp(getMasterRefRegex().source, 'i');
+    }
+    return _probeBookRegex;
+  }
 
   // Chained continuation regex right after a matched reference: e.g. "; 14:6" or ", 18-20"
-  const CHAIN_CONTINUATION_REGEX = new RegExp(
-    `^(\\s*(?:([,;])\\s*)?(?:(?:and|or|&|cf\\.?|v\\.?|vv\\.?)\\s+)?)(\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
-    'iu'
-  );
+  function getChainContinuationRegex() {
+    if (!_chainContinuationRegex) {
+      const translationKeys = getTranslationKeys();
+      _chainContinuationRegex = new RegExp(
+        `^(\\s*(?:([,;])\\s*)?(?:(?:and|or|&|cf\\.?|v\\.?|vv\\.?)\\s+)?)(\\d{1,3}[a-z]?(?:\\s*${COLON_PART}\\s*\\d{1,3}[a-z]?)?(?:\\s*${DASH_PART}\\s*\\d{1,3}[a-z]?)?)(?:[\\s,;–—-]*(?:\\(\\s*(${translationKeys})\\s*\\)|\\[\\s*(${translationKeys})\\s*\\]|\\b(${translationKeys})\\b))?(?![\\p{L}\\p{N}])`,
+        'iu'
+      );
+    }
+    return _chainContinuationRegex;
+  }
 
   /**
    * Normalizes arbitrary dash, colon, and space variants into standard ASCII characters.
@@ -1007,10 +1038,11 @@
     if (!text || text.length < 4 || !QUICK_REF_PREFILTER_REGEX.test(text)) return [];
 
     const results = [];
-    MASTER_REF_REGEX.lastIndex = 0;
+    const masterRegex = getMasterRefRegex();
+    masterRegex.lastIndex = 0;
     let match;
 
-    while ((match = MASTER_REF_REGEX.exec(text)) !== null) {
+    while ((match = masterRegex.exec(text)) !== null) {
       const fullMatch = match[0];
       const rawBook = match[1];
       const rawSpec = match[2];
@@ -1039,7 +1071,7 @@
 
       while (cursor < text.length) {
         const remaining = text.slice(cursor);
-        const chainMatch = CHAIN_CONTINUATION_REGEX.exec(remaining);
+        const chainMatch = getChainContinuationRegex().exec(remaining);
         if (!chainMatch) break;
 
         const prefix = chainMatch[1];
@@ -1048,9 +1080,9 @@
         const chainTrans = chainMatch[4] || chainMatch[5] || chainMatch[6] || parsed.translation;
 
         // If the text immediately after the prefix starts a brand new Book reference (e.g. ", 1 Cor 13:4"),
-        // break out of chaining so MASTER_REF_REGEX matches the new book!
+        // break out of chaining so masterRegex matches the new book!
         const afterPrefix = remaining.slice(prefix.length);
-        const newBookMatch = PROBE_BOOK_REGEX.exec(afterPrefix);
+        const newBookMatch = getProbeBookRegex().exec(afterPrefix);
         if (newBookMatch && newBookMatch.index === 0) {
           break;
         }
@@ -1083,7 +1115,7 @@
         lastChapter = cSeg.chapter;
         lastWasWholeChapter = cSeg.isWholeChapter;
         cursor = refEnd;
-        MASTER_REF_REGEX.lastIndex = cursor;
+        masterRegex.lastIndex = cursor;
       }
     }
 

@@ -264,6 +264,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       if (tabBar) tabBar.style.display = 'none';
     }
+
+    const previewExternalLink = document.getElementById('previewExternalLink');
+    if (previewExternalLink) {
+      previewExternalLink.style.display = config.studyResource === 'none' ? 'none' : '';
+    }
   }
 
   themeSelect?.addEventListener('change', () => saveConfig({ theme: themeSelect.value }));

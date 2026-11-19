@@ -49,20 +49,53 @@ const DEFAULT_SETTINGS = {
 };
 
 // In-memory caches for instant 0ms lookups
-const memoryBibles = new Map();       // translationId -> 66-book array
-const loadingBibles = new Map();      // translationId -> Promise
-const memoryChapterCache = new Map(); // "TRANS:bookId:chapter" -> Array<string>
-const memoryCommentaryCache = new Map(); // "COMM:bookId:chapter:verse" -> Array<CommentaryBlock>
-const MAX_MEMORY_CHAPTERS = 50;       // Keep in-memory cache tiny (< 1 MB)
+const downloadedBookCache = new Map();    // "TRANS:bookId" -> chapters[][]
+const loadingDownloadedBooks = new Map(); // "TRANS:bookId" -> Promise<chapters[][]|null>
+const missingFullBibles = new Set();      // downloadable translationIds confirmed absent from IDB fullBibles
+const knownPerBookBibles = new Set();     // downloadable translationIds confirmed stored per-book in fullBibleBooks
+const migratingBibles = new Map();        // translationId -> Promise (in-flight legacy v2 -> v3 migration)
+const memoryChapterCache = new Map();     // "TRANS:bookId:chapter" -> Array<string>
+const memoryCommentaryCache = new Map();  // "COMM:bookId:chapter:verse" -> Array<CommentaryBlock>
+const MAX_DOWNLOADED_BOOKS = 16;          // Keep up to 16 recent downloaded books in RAM (~1.5-2.5 MB across all translations)
+const MAX_MEMORY_CHAPTERS = 50;           // Keep in-memory chapter cache tiny (< 1 MB)
 
 // Cache Limits & Auto-Pruning
 const MAX_CACHED_CHAPTERS_IDB = 100;  // Max 100 chapters in IndexedDB (~1.5 MB total cap)
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days auto-expiration
+const CHAPTER_CACHE_TOUCH_INTERVAL_MS = 12 * 60 * 60 * 1000; // Refresh LRU timestamp at most every 12h
 const CACHE_ALARM_NAME = 'BH_CACHE_MAINTENANCE';
 
 /**
- * In-memory LRU helpers to guarantee memory footprint remains under 1 MB.
+ * In-memory LRU helpers for per-book downloaded Bibles and cached chapters.
  */
+function getDownloadedBook(key) {
+  if (!downloadedBookCache.has(key)) return null;
+  const chapters = downloadedBookCache.get(key);
+  downloadedBookCache.delete(key);
+  downloadedBookCache.set(key, chapters);
+  return chapters;
+}
+
+function setDownloadedBook(key, chapters) {
+  if (downloadedBookCache.has(key)) {
+    downloadedBookCache.delete(key);
+  }
+  while (downloadedBookCache.size >= MAX_DOWNLOADED_BOOKS) {
+    const oldestKey = downloadedBookCache.keys().next().value;
+    downloadedBookCache.delete(oldestKey);
+  }
+  downloadedBookCache.set(key, chapters);
+}
+
+function clearDownloadedBooksForTranslation(id) {
+  const prefix = `${id}:`;
+  for (const key of downloadedBookCache.keys()) {
+    if (key.startsWith(prefix)) {
+      downloadedBookCache.delete(key);
+    }
+  }
+}
+
 function getMemoryChapter(key) {
   if (!memoryChapterCache.has(key)) return null;
   const val = memoryChapterCache.get(key);
@@ -85,7 +118,7 @@ function setMemoryChapter(key, verses) {
 
 // IndexedDB Configuration
 const DB_NAME = 'BibleHoverDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let dbPromise = null;
 
 function openDB() {
@@ -96,6 +129,9 @@ function openDB() {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('fullBibles')) {
         db.createObjectStore('fullBibles', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('fullBibleBooks')) {
+        db.createObjectStore('fullBibleBooks', { keyPath: 'key' });
       }
       let cacheStore;
       if (!db.objectStoreNames.contains('chapterCache')) {
@@ -108,7 +144,10 @@ function openDB() {
       }
     };
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => {
+      dbPromise = null;
+      reject(req.error);
+    };
   });
   return dbPromise;
 }
@@ -143,14 +182,62 @@ async function idbPut(storeName, value) {
   }
 }
 
-async function idbDelete(storeName, key) {
+async function savePerBookBibleToIDB(id, name, books, downloadedAt = Date.now()) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['fullBibles', 'fullBibleBooks'], 'readwrite');
+    const metaStore = tx.objectStore('fullBibles');
+    const booksStore = tx.objectStore('fullBibleBooks');
+
+    for (let bIdx = 0; bIdx < 66; bIdx++) {
+      booksStore.put({
+        key: `${id}:${bIdx + 1}`,
+        translation: id,
+        bookId: bIdx + 1,
+        chapters: books[bIdx] || []
+      });
+    }
+
+    metaStore.put({
+      id,
+      name,
+      format: 'per-book',
+      downloadedAt
+    });
+
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
+  });
+}
+
+async function idbDeleteTranslation(id) {
   try {
     const db = await openDB();
     return await new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readwrite');
-      const req = tx.objectStore(storeName).delete(key);
-      req.onsuccess = () => resolve(true);
-      req.onerror = () => reject(req.error);
+      const tx = db.transaction(['fullBibles', 'fullBibleBooks', 'chapterCache'], 'readwrite');
+      tx.objectStore('fullBibles').delete(id);
+
+      const booksStore = tx.objectStore('fullBibleBooks');
+      for (let b = 1; b <= 66; b++) {
+        booksStore.delete(`${id}:${b}`);
+      }
+
+      const cacheStore = tx.objectStore('chapterCache');
+      const keysReq = cacheStore.getAllKeys();
+      keysReq.onsuccess = () => {
+        const keys = keysReq.result || [];
+        for (const key of keys) {
+          if (String(key).startsWith(`${id}:`)) {
+            cacheStore.delete(key);
+          }
+        }
+      };
+
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
+      keysReq.onerror = () => reject(keysReq.error);
     });
   } catch (err) {
     return false;
@@ -257,15 +344,21 @@ function scheduleCachePrune() {
 }
 
 // Setup background alarms for regular periodic maintenance
-try {
-  chrome.alarms?.get(CACHE_ALARM_NAME, (alarm) => {
-    if (!alarm) {
-      chrome.alarms?.create(CACHE_ALARM_NAME, {
-        periodInMinutes: 1440 // Check every 24 hours
-      });
-    }
-  });
+function ensureMaintenanceAlarm() {
+  try {
+    chrome.alarms?.get(CACHE_ALARM_NAME, (alarm) => {
+      if (!alarm) {
+        chrome.alarms?.create(CACHE_ALARM_NAME, {
+          periodInMinutes: 1440 // Check every 24 hours
+        });
+      }
+    });
+  } catch (err) {
+    console.warn('Alarms setup notice:', err);
+  }
+}
 
+try {
   chrome.alarms?.onAlarm.addListener((alarm) => {
     if (alarm.name === CACHE_ALARM_NAME) {
       pruneChapterCache().catch(() => {});
@@ -275,8 +368,13 @@ try {
   console.warn('Alarms setup notice:', err);
 }
 
+chrome.runtime.onStartup?.addListener(() => {
+  ensureMaintenanceAlarm();
+});
+
 // Initialize default settings on install & launch welcome page
 chrome.runtime.onInstalled.addListener(async (details) => {
+  ensureMaintenanceAlarm();
   const stored = await chrome.storage.local.get(Object.keys(DEFAULT_SETTINGS));
   const toSet = {};
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
@@ -308,66 +406,148 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 
   // Pre-warm default bundled Bible
-  const trans = stored.defaultTranslation || DEFAULT_SETTINGS.defaultTranslation;
-  if (trans === 'BSB') {
-    loadFullBibleIfAvailable('BSB').catch(() => {});
-  }
+  // (Bundled BSB loads per-book on demand; no pre-warm of the whole Bible needed.)
   // Run startup cache pruning pass
   pruneChapterCache().catch(() => {});
 });
 
-// Run maintenance check on worker initialization
-pruneChapterCache().catch(() => {});
-chrome.storage?.local?.get(['studyResource', 'installDate', 'defaultSitesSeededV2', 'disabledDomains'], (res) => {
-  const patch = {};
-  if (res?.studyResource === 'gty') {
-    patch.studyResource = 'thesingingbible';
+// Bundled BSB is stored as one small JSON file per book (data/bsb/<bookId>.json)
+// so only the books actually used are parsed. A few recent books stay in memory.
+const BUNDLED_BOOK_CACHE_MAX = 4;
+const bundledBookCache = new Map(); // bookId -> Promise<chapters[][]>
+
+function loadBundledBook(bookId) {
+  const hit = bundledBookCache.get(bookId);
+  if (hit) {
+    // Refresh recency
+    bundledBookCache.delete(bookId);
+    bundledBookCache.set(bookId, hit);
+    return hit;
   }
-  if (!res?.installDate) {
-    patch.installDate = Date.now();
+  const p = (async () => {
+    const res = await fetch(chrome.runtime.getURL(`data/bsb/${bookId}.json`));
+    if (!res.ok) throw new Error(`Failed to load bundled BSB book ${bookId}`);
+    return res.json();
+  })();
+  bundledBookCache.set(bookId, p);
+  p.catch(() => bundledBookCache.delete(bookId));
+  while (bundledBookCache.size > BUNDLED_BOOK_CACHE_MAX) {
+    bundledBookCache.delete(bundledBookCache.keys().next().value);
   }
-  if (!res?.defaultSitesSeededV2) {
-    const existing = Array.isArray(res?.disabledDomains) ? res.disabledDomains : [];
-    patch.disabledDomains = Array.from(new Set([...existing, ...DEFAULT_DISABLED_DOMAINS]));
-    patch.defaultSitesSeededV2 = true;
-  }
-  if (Object.keys(patch).length > 0) {
-    chrome.storage.local.set(patch);
-  }
-});
+  return p;
+}
 
 /**
- * Loads a full 66-book Bible from bundled JSON (BSB/KJV) or IndexedDB (`fullBibles`).
+ * Returns the verses array for one chapter of a bundled or downloaded full Bible,
+ * or null if that translation has no full offline copy.
  */
-async function loadFullBibleIfAvailable(translationId) {
+async function getFullBibleChapter(translationId, bookId, chapter) {
   const id = translationId.toUpperCase();
-  if (memoryBibles.has(id)) return memoryBibles.get(id);
-  if (loadingBibles.has(id)) return loadingBibles.get(id);
+  if (id === 'BSB') {
+    const chapters = await loadBundledBook(bookId);
+    return (chapters && chapters[chapter - 1]) || null;
+  }
+  const chapters = await loadDownloadedBook(id, bookId);
+  return (chapters && chapters[chapter - 1]) || null;
+}
 
-  const loadPromise = (async () => {
+/**
+ * Lazily migrates a legacy v1/v2 full-Bible record (`fullBibles[id].books`) into
+ * per-book records in `fullBibleBooks` so subsequent wakes only read the needed book.
+ */
+function migrateLegacyFullBible(id, record) {
+  if (migratingBibles.has(id)) return migratingBibles.get(id);
+
+  const migrationPromise = (async () => {
     try {
-      if (id === 'BSB') {
-        const fileUrl = chrome.runtime.getURL('data/bsb.json');
-        const res = await fetch(fileUrl);
-        if (!res.ok) throw new Error(`Failed to load bundled ${id}`);
-        const books = await res.json();
-        memoryBibles.set(id, books);
-        return books;
-      }
-
-      // Check IndexedDB for downloaded full translation
-      const record = await idbGet('fullBibles', id);
-      if (record && record.books) {
-        memoryBibles.set(id, record.books);
-        return record.books;
-      }
-      return null;
+      const name = record.name || TRANSLATIONS[id]?.name || id;
+      const downloadedAt = record.downloadedAt || Date.now();
+      await savePerBookBibleToIDB(id, name, record.books, downloadedAt);
+      knownPerBookBibles.add(id);
+      missingFullBibles.delete(id);
+    } catch (err) {
+      console.warn(`Legacy migration error for ${id}:`, err);
     } finally {
-      loadingBibles.delete(id);
+      migratingBibles.delete(id);
     }
   })();
 
-  loadingBibles.set(id, loadPromise);
+  migratingBibles.set(id, migrationPromise);
+  return migrationPromise;
+}
+
+/**
+ * Loads one book (array of chapters) of a downloaded offline Bible from `fullBibleBooks`,
+ * seamlessly migrating any legacy v1/v2 `fullBibles` bundle on first access.
+ */
+async function loadDownloadedBook(translationId, bookId) {
+  const id = translationId.toUpperCase();
+  if (!TRANSLATIONS[id]?.downloadable) return null;
+
+  const bookKey = `${id}:${bookId}`;
+  const memChapters = getDownloadedBook(bookKey);
+  if (memChapters) return memChapters;
+  if (missingFullBibles.has(id)) return null;
+  if (loadingDownloadedBooks.has(bookKey)) return loadingDownloadedBooks.get(bookKey);
+
+  const loadPromise = (async () => {
+    try {
+      if (migratingBibles.has(id)) {
+        await migratingBibles.get(id).catch(() => {});
+      }
+
+      const db = await openDB();
+      const bookRecord = await new Promise((resolve, reject) => {
+        const tx = db.transaction('fullBibleBooks', 'readonly');
+        const req = tx.objectStore('fullBibleBooks').get(bookKey);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+
+      if (bookRecord && Array.isArray(bookRecord.chapters)) {
+        knownPerBookBibles.add(id);
+        missingFullBibles.delete(id);
+        setDownloadedBook(bookKey, bookRecord.chapters);
+        return bookRecord.chapters;
+      }
+
+      knownPerBookBibles.delete(id);
+
+      const metaRecord = await new Promise((resolve, reject) => {
+        const tx = db.transaction('fullBibles', 'readonly');
+        const req = tx.objectStore('fullBibles').get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+
+      if (!metaRecord) {
+        if (!knownPerBookBibles.has(id)) {
+          missingFullBibles.add(id);
+        }
+        return null;
+      }
+
+      if (Array.isArray(metaRecord.books)) {
+        // Legacy v1/v2 full-Bible record: serve requested book immediately and split in background
+        const targetChapters = metaRecord.books[bookId - 1] || null;
+        missingFullBibles.delete(id);
+        if (targetChapters) {
+          setDownloadedBook(bookKey, targetChapters);
+        }
+        migrateLegacyFullBible(id, metaRecord);
+        return targetChapters;
+      }
+
+      return null;
+    } catch (err) {
+      console.warn('IDB get error:', err);
+      return null;
+    } finally {
+      loadingDownloadedBooks.delete(bookKey);
+    }
+  })();
+
+  loadingDownloadedBooks.set(bookKey, loadPromise);
   return loadPromise;
 }
 
@@ -405,10 +585,10 @@ async function getChapterVerses(translationId, bookId, chapter) {
   }
 
   // 1. Check Full Bible in memory or bundled/IDB
-  const fullBible = await loadFullBibleIfAvailable(id);
-  if (fullBible && fullBible[bookId - 1] && fullBible[bookId - 1][chapter - 1]) {
+  const fullVerses = await getFullBibleChapter(id, bookId, chapter);
+  if (fullVerses) {
     return {
-      verses: fullBible[bookId - 1][chapter - 1],
+      verses: fullVerses,
       source: TRANSLATIONS[id]?.bundled ? 'offline' : 'downloaded'
     };
   }
@@ -424,11 +604,14 @@ async function getChapterVerses(translationId, bookId, chapter) {
   const cachedRecord = await idbGet('chapterCache', cacheKey);
   if (cachedRecord && Array.isArray(cachedRecord.verses) && cachedRecord.verses.length > 0) {
     setMemoryChapter(cacheKey, cachedRecord.verses);
-    // Refresh timestamp in background for LRU tracking
-    idbPut('chapterCache', {
-      ...cachedRecord,
-      timestamp: Date.now()
-    }).catch(() => {});
+    // Refresh timestamp in background for LRU tracking, throttled to avoid redundant writes
+    const now = Date.now();
+    if (!cachedRecord.timestamp || (now - cachedRecord.timestamp >= CHAPTER_CACHE_TOUCH_INTERVAL_MS)) {
+      idbPut('chapterCache', {
+        ...cachedRecord,
+        timestamp: now
+      }).catch(() => {});
+    }
     return { verses: cachedRecord.verses, source: 'cached' };
   }
 
@@ -492,10 +675,10 @@ async function getChapterVerses(translationId, bookId, chapter) {
 
   // Ultimate fallback to bundled BSB if user is completely offline and requested an uncached online translation
   if (!verses) {
-    const fallbackBible = await loadFullBibleIfAvailable('BSB');
-    if (fallbackBible) {
+    const fallbackVerses = await getFullBibleChapter('BSB', bookId, chapter);
+    if (fallbackVerses) {
       return {
-        verses: fallbackBible[bookId - 1][chapter - 1],
+        verses: fallbackVerses,
         source: 'offline-fallback',
         fallbackTranslation: 'BSB'
       };
@@ -628,14 +811,15 @@ async function downloadFullTranslation(translationId) {
     }
   }
 
-  await idbPut('fullBibles', {
-    id,
-    name: meta.name,
-    books,
-    downloadedAt: Date.now()
-  });
+  if (migratingBibles.has(id)) {
+    await migratingBibles.get(id).catch(() => {});
+  }
 
-  memoryBibles.set(id, books);
+  await savePerBookBibleToIDB(id, meta.name, books, Date.now());
+
+  clearDownloadedBooksForTranslation(id);
+  missingFullBibles.delete(id);
+  knownPerBookBibles.add(id);
   return { ok: true, id, name: meta.name };
 }
 
@@ -768,6 +952,30 @@ function parseCalvinCommentary(html, verseNum) {
   return null;
 }
 
+// Only increment verseHoverCount up to the rating-prompt threshold (5), so hovering
+// doesn't trigger storage writes and chrome.storage.onChanged broadcasts forever.
+const HOVER_COUNT_CAP = 5;
+let hoverCountCapped = false;
+let hoverCountUpdating = false;
+
+function recordVerseHover() {
+  if (hoverCountCapped || hoverCountUpdating) return;
+  hoverCountUpdating = true;
+  chrome.storage.local.get('verseHoverCount', (data) => {
+    hoverCountUpdating = false;
+    const current = data?.verseHoverCount || 0;
+    if (current >= HOVER_COUNT_CAP) {
+      hoverCountCapped = true;
+      return;
+    }
+    const next = current + 1;
+    if (next >= HOVER_COUNT_CAP) {
+      hoverCountCapped = true;
+    }
+    chrome.storage.local.set({ verseHoverCount: next });
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || !message.type) return false;
 
@@ -775,10 +983,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
       switch (message.type) {
         case 'GET_PASSAGE': {
-          chrome.storage.local.get('verseHoverCount', (data) => {
-            const count = (data?.verseHoverCount || 0) + 1;
-            chrome.storage.local.set({ verseHoverCount: count });
-          });
+          recordVerseHover();
           const result = await resolvePassage(
             message.parsedRef,
             message.translation,
@@ -820,23 +1025,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'DELETE_TRANSLATION': {
           const id = (message.translation || '').toUpperCase();
-          memoryBibles.delete(id);
-          await idbDelete('fullBibles', id);
+          if (migratingBibles.has(id)) {
+            await migratingBibles.get(id).catch(() => {});
+          }
+          clearDownloadedBooksForTranslation(id);
+          knownPerBookBibles.delete(id);
 
-          // Clear any in-memory and IDB cached chapters for this translation
+          // Clear any in-memory cached chapters for this translation
           for (const key of memoryChapterCache.keys()) {
             if (key.startsWith(`${id}:`)) {
               memoryChapterCache.delete(key);
             }
           }
-          try {
-            const allChapterKeys = await idbGetAllKeys('chapterCache');
-            for (const key of allChapterKeys) {
-              if (String(key).startsWith(`${id}:`)) {
-                await idbDelete('chapterCache', key);
-              }
-            }
-          } catch (_) {}
+
+          const deleted = await idbDeleteTranslation(id);
+          if (deleted) {
+            missingFullBibles.add(id);
+          }
 
           sendResponse({ ok: true, id });
           break;

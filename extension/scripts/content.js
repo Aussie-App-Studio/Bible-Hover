@@ -48,11 +48,16 @@
     preferredCommentary: 'matthew_henry', // 'matthew_henry' | 'john_calvin' | 'jfb' | 'maclaren' | 'biblehub_all' | 'john_gill' | 'geneva_1599' | 'guzik' | 'tgc' | 'constable' | 'utley'
     multiPillResources: ['commentary', 'guzik', 'tgc', 'constable', 'thesingingbible', 'youtube']
   };
+  const CONFIG_KEYS = Object.keys(config);
+  const CONFIG_KEY_SET = new Set(CONFIG_KEYS);
 
   // State
   let isSiteDisabled = false;
   let detectedRefCount = 0;
   let observer = null;
+  const RATE_PROMPT_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+  let ratePromptSettled = false;
+  let ratePromptNextCheckAt = 0;
 
   // Tooltip controller variables
   let hostEl = null;
@@ -126,13 +131,36 @@
     return false;
   }
 
-  function hasIgnoredAncestor(el) {
+  function hasIgnoredAncestor(el, cache) {
+    if (!cache) {
+      let cur = el;
+      while (cur && cur !== document.body && cur !== document.documentElement) {
+        if (shouldIgnoreElement(cur)) return true;
+        cur = cur.parentElement;
+      }
+      return false;
+    }
+
+    const visited = [];
     let cur = el;
+    let ignored = false;
     while (cur && cur !== document.body && cur !== document.documentElement) {
-      if (shouldIgnoreElement(cur)) return true;
+      const cached = cache.get(cur);
+      if (cached !== undefined) {
+        ignored = cached;
+        break;
+      }
+      visited.push(cur);
+      if (shouldIgnoreElement(cur)) {
+        ignored = true;
+        break;
+      }
       cur = cur.parentElement;
     }
-    return false;
+    for (let i = 0; i < visited.length; i++) {
+      cache.set(visited[i], ignored);
+    }
+    return ignored;
   }
 
   function isPublishedGoogleDoc(host, pathname) {
@@ -1410,12 +1438,14 @@
     if (rateStoreBtn) {
       rateStoreBtn.href = STORE_REVIEW_URL;
       rateStoreBtn.addEventListener('click', () => {
+        ratePromptSettled = true;
         chrome.storage.local.set({ hasRatedOrShared: true });
         if (rateOverlay) rateOverlay.style.display = 'none';
       });
     }
 
     const dismissRatePrompt = () => {
+      ratePromptNextCheckAt = Date.now() + RATE_PROMPT_SNOOZE_MS;
       chrome.storage.local.set({ lastPromptDate: Date.now() });
       if (rateOverlay) rateOverlay.style.display = 'none';
     };
@@ -1489,6 +1519,37 @@
     });
 
     updateSettingsButtonVisibility();
+
+    // Attach window-level UI listeners lazily on first shadow host creation
+    // so unhovered or disabled tabs carry zero idle window listeners.
+    window.addEventListener('message', (e) => {
+      if (e.data === 'BH_TEST_SHOW_RATE_OVERLAY') {
+        const overlay = shadowRoot?.getElementById('bhRateOverlay');
+        if (overlay) overlay.style.display = 'flex';
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (isDrawerOpen) {
+          closeStudyDrawer();
+        } else {
+          hideTooltip(true);
+        }
+      }
+    });
+
+    window.addEventListener('scroll', () => {
+      if (activeTarget && tooltipEl && tooltipEl.classList.contains('visible')) {
+        positionTooltip(activeTarget);
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      if (activeTarget && tooltipEl && tooltipEl.classList.contains('visible')) {
+        positionTooltip(activeTarget);
+      }
+    }, { passive: true });
   }
 
   // Update visibility of the in-card settings buttons based on user preference
@@ -1562,11 +1623,32 @@
       }
     }, { passive: false });
 
-    // 2. Click & drag (grab-to-scroll)
+    // 2. Click & drag (grab-to-scroll): attach window listeners only while dragging
     let isDown = false;
     let startX = 0;
     let scrollStart = 0;
     let hasDragged = false;
+
+    const onMouseMove = (e) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 3) {
+        hasDragged = true;
+      }
+      containerEl.scrollLeft = scrollStart - dx;
+    };
+
+    const stopDrag = () => {
+      if (isDown) {
+        isDown = false;
+        containerEl.classList.remove('bh-grabbing');
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', stopDrag);
+        setTimeout(() => {
+          hasDragged = false;
+        }, 60);
+      }
+    };
 
     containerEl.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return; // Only primary mouse button
@@ -1575,28 +1657,9 @@
       startX = e.clientX;
       scrollStart = containerEl.scrollLeft;
       containerEl.classList.add('bh-grabbing');
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', stopDrag);
     });
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isDown) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 3) {
-        hasDragged = true;
-      }
-      containerEl.scrollLeft = scrollStart - dx;
-    });
-
-    const stopDrag = () => {
-      if (isDown) {
-        isDown = false;
-        containerEl.classList.remove('bh-grabbing');
-        setTimeout(() => {
-          hasDragged = false;
-        }, 60);
-      }
-    };
-
-    window.addEventListener('mouseup', stopDrag);
 
     // Suppress click event on pills if mouse was dragged
     containerEl.addEventListener('click', (e) => {
@@ -1718,15 +1781,17 @@
         }
       }
 
+      const frag = document.createDocumentFragment();
       let firstHighlightEl = null;
       for (const vObj of res.fullChapterVerses) {
         const div = document.createElement('div');
         const isHL = highlightedVerses.has(vObj.verse);
         div.className = `bh-verse-item ${isHL ? 'highlight' : ''}`;
         div.innerHTML = `<span class="bh-verse-num">${vObj.verse}</span> ${escapeHtml(vObj.text)}`;
-        body.appendChild(div);
+        frag.appendChild(div);
         if (isHL && !firstHighlightEl) firstHighlightEl = div;
       }
+      body.appendChild(frag);
 
       if (firstHighlightEl) {
         requestAnimationFrame(() => {
@@ -1735,14 +1800,16 @@
         });
       }
     } else {
+      const frag = document.createDocumentFragment();
       for (const seg of res.segments) {
         for (const vObj of seg.verses) {
           const div = document.createElement('div');
           div.className = 'bh-verse-item';
           div.innerHTML = `<span class="bh-verse-num">${vObj.verse}</span> ${escapeHtml(vObj.text)}`;
-          body.appendChild(div);
+          frag.appendChild(div);
         }
       }
+      body.appendChild(frag);
     }
   }
 
@@ -1774,23 +1841,27 @@
         footerRight.appendChild(chapterToggle);
       }
 
-      const cA = document.createElement('a');
-      cA.className = 'bh-link-btn';
-      cA.href = commLink.url;
-      cA.target = '_blank';
-      cA.rel = 'noopener noreferrer';
-      cA.innerHTML = `${commLink.label} ↗`;
-      cA.title = `Read commentary on ${commLink.label}`;
-      footerRight.appendChild(cA);
+      if (commLink) {
+        const cA = document.createElement('a');
+        cA.className = 'bh-link-btn';
+        cA.href = commLink.url;
+        cA.target = '_blank';
+        cA.rel = 'noopener noreferrer';
+        cA.innerHTML = `${commLink.label} ↗`;
+        cA.title = `Read commentary on ${commLink.label}`;
+        footerRight.appendChild(cA);
+      }
 
-      const sA = document.createElement('a');
-      sA.className = 'bh-link-btn';
-      sA.href = studyLink.url;
-      sA.target = '_blank';
-      sA.rel = 'noopener noreferrer';
-      sA.innerHTML = `${studyLink.label} ↗`;
-      sA.title = `Study on ${studyLink.label}`;
-      footerRight.appendChild(sA);
+      if (studyLink) {
+        const sA = document.createElement('a');
+        sA.className = 'bh-link-btn';
+        sA.href = studyLink.url;
+        sA.target = '_blank';
+        sA.rel = 'noopener noreferrer';
+        sA.innerHTML = `${studyLink.label} ↗`;
+        sA.title = `Study on ${studyLink.label}`;
+        footerRight.appendChild(sA);
+      }
 
     } else if (mode === 'in_card_tab') {
       // Option 2: In-Card Tab Switcher (Scripture <-> Commentary in header)
@@ -1799,14 +1870,16 @@
       }
 
       if (currentCardView === 'commentary') {
-        const bA = document.createElement('a');
-        bA.className = 'bh-link-btn';
-        bA.href = commLink.url;
-        bA.target = '_blank';
-        bA.rel = 'noopener noreferrer';
-        bA.innerHTML = `💬 BibleHub ↗`;
-        bA.title = 'Open all commentary notes on BibleHub';
-        footerRight.appendChild(bA);
+        if (commLink) {
+          const bA = document.createElement('a');
+          bA.className = 'bh-link-btn';
+          bA.href = commLink.url;
+          bA.target = '_blank';
+          bA.rel = 'noopener noreferrer';
+          bA.innerHTML = `💬 BibleHub ↗`;
+          bA.title = 'Open all commentary notes on BibleHub';
+          footerRight.appendChild(bA);
+        }
 
         const tgcLink = getCommentaryLink(res, 'tgc');
         const tA = document.createElement('a');
@@ -1836,14 +1909,16 @@
           footerRight.appendChild(chapterToggle);
         }
 
-        const sA = document.createElement('a');
-        sA.className = 'bh-link-btn';
-        sA.href = studyLink.url;
-        sA.target = '_blank';
-        sA.rel = 'noopener noreferrer';
-        sA.innerHTML = `${studyLink.label} ↗`;
-        sA.title = `Study on ${studyLink.label}`;
-        footerRight.appendChild(sA);
+        if (studyLink) {
+          const sA = document.createElement('a');
+          sA.className = 'bh-link-btn';
+          sA.href = studyLink.url;
+          sA.target = '_blank';
+          sA.rel = 'noopener noreferrer';
+          sA.innerHTML = `${studyLink.label} ↗`;
+          sA.title = `Study on ${studyLink.label}`;
+          footerRight.appendChild(sA);
+        }
       }
 
     } else if (mode === 'side_drawer') {
@@ -1870,14 +1945,16 @@
       });
       footerRight.appendChild(drawerBtn);
 
-      const sA = document.createElement('a');
-      sA.className = 'bh-link-btn';
-      sA.href = studyLink.url;
-      sA.target = '_blank';
-      sA.rel = 'noopener noreferrer';
-      sA.innerHTML = `${studyLink.label} ↗`;
-      sA.title = `Study on ${studyLink.label}`;
-      footerRight.appendChild(sA);
+      if (studyLink) {
+        const sA = document.createElement('a');
+        sA.className = 'bh-link-btn';
+        sA.href = studyLink.url;
+        sA.target = '_blank';
+        sA.rel = 'noopener noreferrer';
+        sA.innerHTML = `${studyLink.label} ↗`;
+        sA.title = `Study on ${studyLink.label}`;
+        footerRight.appendChild(sA);
+      }
 
     } else if (mode === 'multi_pills') {
       // Option 4: Multi-Resource Action Pills in Footer
@@ -1916,6 +1993,8 @@
 
   // Get commentary URL based on chosen commentator
   function getCommentaryLink(passageRes, pref) {
+    if (pref === 'none') return null;
+
     const bookNameUrl = (passageRes.bookName || '').toLowerCase().replace(/\s+/g, '_');
     const firstCh = passageRes.primaryChapter || 1;
     const firstV = passageRes.segments?.[0]?.verseStart || 1;
@@ -2383,6 +2462,8 @@
 
   // Generate external study link according to user preference
   function generateStudyResourceLink(passageRes, resourceKey) {
+    if (resourceKey === 'none') return null;
+
     const bookNameUrl = passageRes.bookName.toLowerCase().replace(/\s+/g, '_');
     const firstCh = passageRes.primaryChapter || 1;
     const cleanLabel = (passageRes.canonicalLabel || '').replace(/[–—]/g, '-');
@@ -2547,17 +2628,29 @@
     const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
     if (!rateOverlay) return;
 
+    const now = Date.now();
+    if (ratePromptSettled || now < ratePromptNextCheckAt) {
+      rateOverlay.style.display = 'none';
+      return;
+    }
+
     try {
       chrome.storage.local.get(['verseHoverCount', 'hasRatedOrShared', 'lastPromptDate'], (data) => {
         if (!data || data.hasRatedOrShared) {
+          ratePromptSettled = true;
           rateOverlay.style.display = 'none';
           return;
         }
 
         const count = data.verseHoverCount || 0;
-        const now = Date.now();
+        const currentNow = Date.now();
         const lastPrompt = data.lastPromptDate || 0;
-        const daysSinceLastPrompt = (now - lastPrompt) / (1000 * 60 * 60 * 24);
+        if (lastPrompt > 0 && currentNow - lastPrompt < RATE_PROMPT_SNOOZE_MS) {
+          ratePromptNextCheckAt = lastPrompt + RATE_PROMPT_SNOOZE_MS;
+          rateOverlay.style.display = 'none';
+          return;
+        }
+        const daysSinceLastPrompt = (currentNow - lastPrompt) / (1000 * 60 * 60 * 24);
 
         // Trigger after the extension has been used a couple of times (>= 5 hovers), snoozed for 7 days
         if (count >= 5 && daysSinceLastPrompt >= 7) {
@@ -2570,14 +2663,6 @@
       rateOverlay.style.display = 'none';
     }
   }
-
-  // Developer / test trigger for testing the in-card rating overlay
-  window.addEventListener('message', (e) => {
-    if (e.data === 'BH_TEST_SHOW_RATE_OVERLAY') {
-      const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
-      if (rateOverlay) rateOverlay.style.display = 'flex';
-    }
-  });
 
   function scheduleHideTooltip() {
     clearTimeout(hideTimer);
@@ -2606,9 +2691,12 @@
   let dynamicStyleEl = null;
   function updateDynamicUnderlineStyles() {
     if (!dynamicStyleEl) {
+      if (detectedRefCount === 0) return;
+      const targetHead = document.head || document.documentElement;
+      if (!targetHead) return;
       dynamicStyleEl = document.createElement('style');
       dynamicStyleEl.id = 'bible-hover-dynamic-style';
-      document.head.appendChild(dynamicStyleEl);
+      targetHead.appendChild(dynamicStyleEl);
     }
 
     if (!config.enabled || isSiteDisabled) {
@@ -2753,9 +2841,9 @@
   }
 
   // Efficient TreeWalker over element subtrees (prunes ignored branches via FILTER_REJECT)
-  function scanElement(rootElement, skipBadgeUpdate = false) {
+  function scanElement(rootElement, skipBadgeUpdate = false, ancestorIgnoreCache = null) {
     if (!rootElement || !config.enabled || isSiteDisabled) return;
-    if (rootElement.nodeType === Node.ELEMENT_NODE && hasIgnoredAncestor(rootElement)) return;
+    if (rootElement.nodeType === Node.ELEMENT_NODE && hasIgnoredAncestor(rootElement, ancestorIgnoreCache)) return;
 
     setupHoverDelegation();
 
@@ -2787,13 +2875,31 @@
       tagTextNode(node);
     }
 
+    // Inject underline stylesheet lazily once at least one reference exists on the page
+    if (!dynamicStyleEl && detectedRefCount > 0) {
+      updateDynamicUnderlineStyles();
+    }
+
     // Update extension badge with detected count
     if (!skipBadgeUpdate && detectedRefCount > 0) {
+      queueBadgeUpdate();
+    }
+  }
+
+  // Coalesce badge updates: one trailing message per burst, never a duplicate count
+  let badgeTimer = null;
+  let lastSentBadgeCount = -1;
+  function queueBadgeUpdate() {
+    if (badgeTimer) return;
+    badgeTimer = setTimeout(() => {
+      badgeTimer = null;
+      if (detectedRefCount === lastSentBadgeCount) return;
+      lastSentBadgeCount = detectedRefCount;
       safeSendMessage({
         type: 'SET_BADGE_COUNT',
         count: detectedRefCount
       });
-    }
+    }, 250);
   }
 
   // Idle task scheduler with fallback for browsers without requestIdleCallback
@@ -2824,6 +2930,7 @@
 
       const sliceStart = performance.now();
       const prevCount = detectedRefCount;
+      const ancestorIgnoreCache = new Map();
       const iterator = pendingNodes.values();
       let step = iterator.next();
 
@@ -2832,7 +2939,7 @@
         pendingNodes.delete(el);
 
         if (el.isConnected) {
-          scanElement(el, true);
+          scanElement(el, true, ancestorIgnoreCache);
         }
 
         step = iterator.next();
@@ -2848,10 +2955,7 @@
       }
 
       if (detectedRefCount > prevCount) {
-        safeSendMessage({
-          type: 'SET_BADGE_COUNT',
-          count: detectedRefCount
-        });
+        queueBadgeUpdate();
       }
 
       if (pendingNodes.size > 0 && !idleCallbackId) {
@@ -2939,9 +3043,8 @@
       return;
     }
 
-    setupSelectionLookup();
-
     if (config.scanMode === 'selection') {
+      setupSelectionLookup();
       if (observer) observer.disconnect();
     } else {
       scanElement(document.body);
@@ -2949,33 +3052,11 @@
     }
   }
 
-  // Close tooltip on Esc key or resize/scroll outside
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (isDrawerOpen) {
-        closeStudyDrawer();
-      } else {
-        hideTooltip(true);
-      }
-    }
-  });
-
-  window.addEventListener('scroll', () => {
-    if (activeTarget && tooltipEl && tooltipEl.classList.contains('visible')) {
-      positionTooltip(activeTarget);
-    }
-  }, { passive: true });
-
-  window.addEventListener('resize', () => {
-    if (activeTarget && tooltipEl && tooltipEl.classList.contains('visible')) {
-      positionTooltip(activeTarget);
-    }
-  }, { passive: true });
-
   // Load settings and initialize
   try {
     if (chrome.runtime?.id && chrome.storage?.local) {
-      chrome.storage.local.get(null, (stored) => {
+      // Only fetch the settings this script uses (not the whole storage area)
+      chrome.storage.local.get(CONFIG_KEYS, (stored) => {
         if (!chrome.runtime?.id || chrome.runtime.lastError) return;
         if (stored) {
           config = { ...config, ...stored };
@@ -2983,8 +3064,6 @@
 
         isSiteDisabled = checkSiteDisabled(config.disabledDomains);
         if (!config.enabled || isSiteDisabled) return;
-
-        updateDynamicUnderlineStyles();
 
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', () => {
@@ -3011,15 +3090,30 @@
           return;
         }
 
+        if (changes.hasRatedOrShared) {
+          ratePromptSettled = Boolean(changes.hasRatedOrShared.newValue);
+        }
+        if (changes.lastPromptDate) {
+          const ts = changes.lastPromptDate.newValue || 0;
+          ratePromptNextCheckAt = ts > 0 ? ts + RATE_PROMPT_SNOOZE_MS : 0;
+        }
+
+        let configChanged = false;
         let stylesNeedUpdate = false;
         for (const [k, v] of Object.entries(changes)) {
+          if (!CONFIG_KEY_SET.has(k)) continue;
+          configChanged = true;
           config[k] = v.newValue;
           if (k === 'underlineStyle' || k === 'underlineColor') {
             stylesNeedUpdate = true;
           }
         }
 
-        isSiteDisabled = checkSiteDisabled(config.disabledDomains);
+        if (!configChanged) return;
+
+        if (changes.disabledDomains) {
+          isSiteDisabled = checkSiteDisabled(config.disabledDomains);
+        }
 
         if (stylesNeedUpdate) {
           updateDynamicUnderlineStyles();
@@ -3035,6 +3129,10 @@
           if (resCachedPassage) {
             updateCardFooterActions(resCachedPassage);
           }
+        }
+
+        if ((changes.preferredCommentary || changes.studyResource || changes.commentaryMode) && resCachedPassage) {
+          updateCardFooterActions(resCachedPassage);
         }
 
         if (changes.showSettingsButton || changes.minimalistMode) {
