@@ -55,6 +55,8 @@
   let isSiteDisabled = false;
   let detectedRefCount = 0;
   let observer = null;
+  let bodySwapObserver = null;
+  let observedBody = null;
   const RATE_PROMPT_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
   let ratePromptSettled = false;
   let ratePromptNextCheckAt = 0;
@@ -186,13 +188,22 @@
     });
   }
 
+  function disconnectObservers() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    if (bodySwapObserver) {
+      bodySwapObserver.disconnect();
+      bodySwapObserver = null;
+    }
+    observedBody = null;
+  }
+
   // Safe message sender to prevent "Extension context invalidated" & unhandled lastError
   function safeSendMessage(msg, callback) {
     if (!chrome.runtime?.id) {
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
+      disconnectObservers();
       return;
     }
     try {
@@ -205,16 +216,18 @@
       });
     } catch (e) {
       // Extension context invalidated; detach observer
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
+      disconnectObservers();
     }
   }
 
   // --- Tooltip & Shadow DOM Construction ---
   function initShadowHost() {
-    if (hostEl) return;
+    if (hostEl) {
+      if (!hostEl.isConnected && document.body) {
+        document.body.appendChild(hostEl);
+      }
+      return;
+    }
 
     hostEl = document.createElement('div');
     hostEl.id = 'bible-hover-root';
@@ -2722,6 +2735,9 @@
       dynamicStyleEl = document.createElement('style');
       dynamicStyleEl.id = 'bible-hover-dynamic-style';
       targetHead.appendChild(dynamicStyleEl);
+    } else if (!dynamicStyleEl.isConnected) {
+      const targetHead = document.head || document.documentElement;
+      if (targetHead) targetHead.appendChild(dynamicStyleEl);
     }
 
     if (!config.enabled || isSiteDisabled) {
@@ -2901,7 +2917,7 @@
     }
 
     // Inject underline stylesheet lazily once at least one reference exists on the page
-    if (!dynamicStyleEl && detectedRefCount > 0) {
+    if ((!dynamicStyleEl || !dynamicStyleEl.isConnected) && detectedRefCount > 0) {
       updateDynamicUnderlineStyles();
     }
 
@@ -2938,9 +2954,31 @@
         });
       }, 50);
 
+  // Lightweight direct-child observer on <html> to detect frameworks (e.g. Hotwire Turbo)
+  // that replace document.body without a full page reload (0 overhead when <body> stays put)
+  function ensureBodySwapObserver() {
+    if (bodySwapObserver || !document.documentElement) return;
+    bodySwapObserver = new MutationObserver(() => {
+      if (!config.enabled || isSiteDisabled || config.scanMode === 'selection') return;
+      if (!document.body || document.body === observedBody) return;
+
+      hideTooltip(true);
+      detectedRefCount = 0;
+      lastSentBadgeCount = -1;
+      scanElement(document.body);
+      setupMutationObserver();
+      if (detectedRefCount === 0) {
+        queueBadgeUpdate();
+      }
+    });
+    bodySwapObserver.observe(document.documentElement, { childList: true });
+  }
+
   // MutationObserver for SPAs / dynamic content with requestIdleCallback & time-sliced chunking
   function setupMutationObserver() {
     if (observer) observer.disconnect();
+    if (!document.body) return;
+    observedBody = document.body;
 
     let debounceTimerId = null;
     let idleCallbackId = null;
@@ -3011,6 +3049,8 @@
       childList: true,
       subtree: true
     });
+
+    ensureBodySwapObserver();
   }
 
   // On-Selection / On-Demand lookup mode (0% background scanning overhead)
@@ -3064,13 +3104,13 @@
 
     if (!config.enabled || isSiteDisabled) {
       hideTooltip(true);
-      if (observer) observer.disconnect();
+      disconnectObservers();
       return;
     }
 
     if (config.scanMode === 'selection') {
       setupSelectionLookup();
-      if (observer) observer.disconnect();
+      disconnectObservers();
     } else {
       scanElement(document.body);
       setupMutationObserver();
@@ -3108,9 +3148,8 @@
     if (chrome.runtime?.id && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (!chrome.runtime?.id || area !== 'local') {
-          if (!chrome.runtime?.id && observer) {
-            observer.disconnect();
-            observer = null;
+          if (!chrome.runtime?.id) {
+            disconnectObservers();
           }
           return;
         }
