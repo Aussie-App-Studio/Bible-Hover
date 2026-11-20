@@ -58,8 +58,13 @@
   let bodySwapObserver = null;
   let observedBody = null;
   const RATE_PROMPT_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+  const RATE_PROMPT_MIN_VERSES = 2;
+  const RATE_PROMPT_MIN_NATURAL_HEIGHT = 260;
+  const RATE_PROMPT_MAX_SHORT_DEFERS = 4;
   let ratePromptSettled = false;
   let ratePromptNextCheckAt = 0;
+  let ratePromptEligible = false;
+  let ratePromptDeferredShortCount = 0;
 
   // Tooltip controller variables
   let hostEl = null;
@@ -250,7 +255,7 @@
         position: fixed;
         width: 440px;
         max-width: calc(100vw - 32px);
-        max-height: 480px;
+        max-height: min(480px, calc(100vh - 24px));
         border-radius: 12px;
         box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.22), 0 4px 12px rgba(0, 0, 0, 0.1);
         display: flex;
@@ -1194,14 +1199,21 @@
       }
 
       /* In-Card Rating Prompt Overlay */
+      @keyframes bhFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
       .bh-rate-overlay {
         position: absolute;
         inset: 0;
         z-index: 60;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 20px;
+        padding: 24px 22px 20px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
         backdrop-filter: blur(8px);
         animation: bhFadeIn 0.2s ease-out;
       }
@@ -1226,22 +1238,33 @@
         gap: 10px;
         width: 100%;
         max-width: 360px;
+        margin: auto;
+        flex-shrink: 0;
       }
       .bh-rate-close {
         position: absolute;
-        top: -12px;
-        right: -8px;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
         background: transparent;
         border: none;
-        font-size: 16px;
+        font-size: 15px;
+        line-height: 1;
         cursor: pointer;
         color: inherit;
-        opacity: 0.55;
-        padding: 4px;
-        transition: opacity 0.15s ease;
+        opacity: 0.6;
+        padding: 0;
+        transition: opacity 0.15s ease, background-color 0.15s ease;
       }
       .bh-rate-close:hover {
         opacity: 1;
+        background-color: rgba(128, 128, 128, 0.15);
       }
       .bh-rate-stars {
         font-size: 20px;
@@ -1306,8 +1329,8 @@
     tooltipEl.className = 'bh-tooltip';
     tooltipEl.innerHTML = `
       <div class="bh-rate-overlay" id="bhRateOverlay" style="display: none;">
+        <button class="bh-rate-close" id="bhRateCloseBtn" title="Close & continue to scripture" aria-label="Close">✕</button>
         <div class="bh-rate-card">
-          <button class="bh-rate-close" id="bhRateCloseBtn" title="Close & continue to scripture">✕</button>
           <div class="bh-rate-stars">⭐⭐⭐⭐⭐</div>
           <div class="bh-rate-title">Help Others Discover Bible Hover</div>
           <div class="bh-rate-msg">
@@ -1436,7 +1459,6 @@
     closeBtn.addEventListener('click', () => hideTooltip(true));
 
     // Rating & Review in-card overlay listeners
-    const rateOverlay = shadowRoot.getElementById('bhRateOverlay');
     const rateStoreBtn = shadowRoot.getElementById('bhRateStoreBtn');
     const rateCloseBtn = shadowRoot.getElementById('bhRateCloseBtn');
     const rateLaterBtn = shadowRoot.getElementById('bhRateLaterBtn');
@@ -1446,15 +1468,19 @@
       rateStoreBtn.href = STORE_REVIEW_URL;
       rateStoreBtn.addEventListener('click', () => {
         ratePromptSettled = true;
+        ratePromptEligible = false;
+        ratePromptDeferredShortCount = 0;
         chrome.storage.local.set({ hasRatedOrShared: true });
-        if (rateOverlay) rateOverlay.style.display = 'none';
+        hideRateOverlay(true);
       });
     }
 
     const dismissRatePrompt = () => {
       ratePromptNextCheckAt = Date.now() + RATE_PROMPT_SNOOZE_MS;
+      ratePromptEligible = false;
+      ratePromptDeferredShortCount = 0;
       chrome.storage.local.set({ lastPromptDate: Date.now() });
-      if (rateOverlay) rateOverlay.style.display = 'none';
+      hideRateOverlay(true);
     };
 
     rateCloseBtn?.addEventListener('click', dismissRatePrompt);
@@ -1531,8 +1557,7 @@
     // so unhovered or disabled tabs carry zero idle window listeners.
     window.addEventListener('message', (e) => {
       if (e.data === 'BH_TEST_SHOW_RATE_OVERLAY') {
-        const overlay = shadowRoot?.getElementById('bhRateOverlay');
-        if (overlay) overlay.style.display = 'flex';
+        showRateOverlay();
       }
     });
 
@@ -1554,6 +1579,9 @@
 
     window.addEventListener('resize', () => {
       if (activeTarget && tooltipEl && tooltipEl.classList.contains('visible')) {
+        if (tooltipEl.classList.contains('bh-rate-open')) {
+          syncRateOverlayHeight();
+        }
         positionTooltip(activeTarget);
       }
     }, { passive: true });
@@ -1597,6 +1625,8 @@
       const topAbove = rect.top - ttHeight - 8;
       if (topAbove >= padding) {
         top = topAbove;
+      } else {
+        top = Math.max(padding, window.innerHeight - ttHeight - padding);
       }
     }
 
@@ -1748,7 +1778,7 @@
   }
 
   // Fetch verse passage data via background worker
-  function loadPassageContent(parsedRef, translation, includeFullChapter = false) {
+  function loadPassageContent(parsedRef, translation, includeFullChapter = false, checkRatePrompt = false) {
     const body = shadowRoot.getElementById('bhBody');
     const badge = shadowRoot.getElementById('bhBadge');
     const footerLeft = shadowRoot.getElementById('bhFooterLeft');
@@ -1766,6 +1796,8 @@
       translation,
       includeFullChapter
     }, (res) => {
+      if (currentRefData !== parsedRef) return;
+
       if (!res || !res.ok) {
         body.innerHTML = `<div class="bh-error">${res?.error || 'Failed to load reference.'}</div>`;
         return;
@@ -1798,6 +1830,11 @@
       // Re-position tooltip if height changed
       if (activeTarget) {
         positionTooltip(activeTarget);
+      }
+
+      // Check in-card rating prompt after passage has rendered so we know its natural size
+      if (checkRatePrompt && tooltipEl?.classList.contains('visible')) {
+        checkInCardRatingPrompt(parsedRef, res);
       }
     });
   }
@@ -2639,36 +2676,108 @@
     const minClass = config.minimalistMode ? 'bh-minimalist' : '';
     const fontFam = `font-family-${config.scriptureFont || 'sans'}`;
     tooltipEl.className = `bh-tooltip theme-${theme} font-${config.fontSize} ${fontFam} ${minClass}`.trim();
+    hideRateOverlay(false);
     updateSettingsButtonVisibility();
 
     // Set title
     const titleEl = shadowRoot.querySelector('.bh-ref-title');
     titleEl.textContent = parsedRef.canonicalLabel;
 
-    // Render pills & load passage
+    // Initial positioning & show before async passage load finishes
+    tooltipEl.classList.add('visible');
+
+    // Render pills & load passage (rating prompt is evaluated once passage renders)
     renderTranslationBar();
-    loadPassageContent(parsedRef, currentActiveTranslation, false);
+    loadPassageContent(parsedRef, currentActiveTranslation, false, true);
 
     // If study drawer is currently open, update drawer for hovered reference
     if (isDrawerOpen) {
       openStudyDrawer(parsedRef);
     }
 
-    // Check if in-card rating prompt should appear after a couple of uses
-    checkInCardRatingPrompt();
-
-    // Initial positioning & show
-    tooltipEl.classList.add('visible');
     positionTooltip(target);
   }
 
-  function checkInCardRatingPrompt() {
+  function syncRateOverlayHeight() {
+    if (!tooltipEl || !shadowRoot) return;
+    const rateOverlay = shadowRoot.getElementById('bhRateOverlay');
+    const rateCard = rateOverlay?.querySelector('.bh-rate-card');
+    if (!rateOverlay || !rateCard || rateOverlay.style.display === 'none') return;
+
+    const overlayStyle = getComputedStyle(rateOverlay);
+    const padY = (parseFloat(overlayStyle.paddingTop) || 0) + (parseFloat(overlayStyle.paddingBottom) || 0);
+    const tooltipStyle = getComputedStyle(tooltipEl);
+    const borderY = (parseFloat(tooltipStyle.borderTopWidth) || 0) + (parseFloat(tooltipStyle.borderBottomWidth) || 0);
+    const maxTooltipHeight = Math.max(160, Math.min(480, window.innerHeight - 24));
+    const computeHeight = () => Math.min(
+      Math.ceil(rateCard.offsetHeight + padY + borderY),
+      maxTooltipHeight
+    );
+
+    tooltipEl.style.minHeight = `${computeHeight()}px`;
+    // Re-measure once after expansion in case a temporary vertical scrollbar disappeared
+    tooltipEl.style.minHeight = `${computeHeight()}px`;
+  }
+
+  function showRateOverlay() {
+    const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
+    if (!rateOverlay || !tooltipEl) return;
+
+    rateOverlay.style.display = 'flex';
+    rateOverlay.scrollTop = 0;
+    tooltipEl.classList.add('bh-rate-open');
+    syncRateOverlayHeight();
+
+    if (activeTarget && tooltipEl.classList.contains('visible')) {
+      positionTooltip(activeTarget);
+    }
+  }
+
+  function hideRateOverlay(reposition = true) {
+    const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
+    if (rateOverlay) {
+      rateOverlay.style.display = 'none';
+    }
+    if (tooltipEl) {
+      tooltipEl.classList.remove('bh-rate-open');
+      tooltipEl.style.minHeight = '';
+    }
+    if (reposition && activeTarget && tooltipEl?.classList.contains('visible')) {
+      positionTooltip(activeTarget);
+    }
+  }
+
+  function checkInCardRatingPrompt(parsedRef, passageRes) {
     const rateOverlay = shadowRoot?.getElementById('bhRateOverlay');
     if (!rateOverlay) return;
 
     const now = Date.now();
     if (ratePromptSettled || now < ratePromptNextCheckAt) {
-      rateOverlay.style.display = 'none';
+      hideRateOverlay(false);
+      return;
+    }
+
+    const verseCount = showingFullChapter && passageRes?.fullChapterVerses
+      ? passageRes.fullChapterVerses.length
+      : (passageRes?.segments || []).reduce((sum, seg) => sum + (seg.verses ? seg.verses.length : 0), 0);
+
+    const evaluateAndMaybeShow = () => {
+      if (!tooltipEl?.classList.contains('visible') || currentRefData !== parsedRef) return;
+
+      const naturalHeight = tooltipEl.offsetHeight || 0;
+      const hasComfortableRoom = verseCount >= RATE_PROMPT_MIN_VERSES || naturalHeight >= RATE_PROMPT_MIN_NATURAL_HEIGHT;
+
+      if (hasComfortableRoom || ratePromptDeferredShortCount >= RATE_PROMPT_MAX_SHORT_DEFERS) {
+        ratePromptDeferredShortCount = 0;
+        showRateOverlay();
+      } else {
+        ratePromptDeferredShortCount++;
+        hideRateOverlay(false);
+      }
+    };
+
+    if (ratePromptEligible) {
+      evaluateAndMaybeShow();
       return;
     }
 
@@ -2676,7 +2785,8 @@
       chrome.storage.local.get(['verseHoverCount', 'hasRatedOrShared', 'lastPromptDate'], (data) => {
         if (!data || data.hasRatedOrShared) {
           ratePromptSettled = true;
-          rateOverlay.style.display = 'none';
+          ratePromptEligible = false;
+          hideRateOverlay(false);
           return;
         }
 
@@ -2685,20 +2795,22 @@
         const lastPrompt = data.lastPromptDate || 0;
         if (lastPrompt > 0 && currentNow - lastPrompt < RATE_PROMPT_SNOOZE_MS) {
           ratePromptNextCheckAt = lastPrompt + RATE_PROMPT_SNOOZE_MS;
-          rateOverlay.style.display = 'none';
+          ratePromptEligible = false;
+          hideRateOverlay(false);
           return;
         }
         const daysSinceLastPrompt = (currentNow - lastPrompt) / (1000 * 60 * 60 * 24);
 
         // Trigger after the extension has been used a couple of times (>= 5 hovers), snoozed for 7 days
         if (count >= 5 && daysSinceLastPrompt >= 7) {
-          rateOverlay.style.display = 'flex';
+          ratePromptEligible = true;
+          evaluateAndMaybeShow();
         } else {
-          rateOverlay.style.display = 'none';
+          hideRateOverlay(false);
         }
       });
     } catch {
-      rateOverlay.style.display = 'none';
+      hideRateOverlay(false);
     }
   }
 
@@ -2716,6 +2828,7 @@
     clearTimeout(hideTimer);
     if (!tooltipEl) return;
 
+    hideRateOverlay(false);
     if (immediate) {
       tooltipEl.classList.remove('visible');
       activeTarget = null;
@@ -3156,10 +3269,14 @@
 
         if (changes.hasRatedOrShared) {
           ratePromptSettled = Boolean(changes.hasRatedOrShared.newValue);
+          ratePromptEligible = false;
+          ratePromptDeferredShortCount = 0;
         }
         if (changes.lastPromptDate) {
           const ts = changes.lastPromptDate.newValue || 0;
           ratePromptNextCheckAt = ts > 0 ? ts + RATE_PROMPT_SNOOZE_MS : 0;
+          ratePromptEligible = false;
+          ratePromptDeferredShortCount = 0;
         }
 
         let configChanged = false;
